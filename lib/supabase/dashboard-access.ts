@@ -13,6 +13,12 @@ export type DashboardAccess = {
   adminClient: ReturnType<typeof createAdminClient>;
 };
 
+export function hasAdministrativeAccess(
+  access: Pick<DashboardAccess, "role">
+): boolean {
+  return access.role === "admin" || access.role === "supervisor";
+}
+
 export type DashboardAccessResult =
   | { ok: true; access: DashboardAccess }
   | { ok: false; status: 401 | 403 | 500; error: string };

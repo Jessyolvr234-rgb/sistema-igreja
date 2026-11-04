@@ -285,7 +285,7 @@ export async function GET(request: Request) {
   }
 
   const { data: adminProfiles, error: adminProfilesError } =
-    access.role === "admin"
+    access.role === "admin" || access.role === "supervisor"
       ? await access.adminClient
           .from("profiles")
           .select("id, role")

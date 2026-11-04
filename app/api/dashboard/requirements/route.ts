@@ -619,7 +619,7 @@ export async function GET(request: Request) {
         ),
         members: accessibleMemberIds.length,
       },
-      canManage: access.role === "admin",
+      canManage: access.role !== "leader",
       member: { id: member.id },
     });
   }
@@ -661,7 +661,7 @@ export async function GET(request: Request) {
       pending: Math.max(0, requiredSlots - completedRequiredPairs.size),
       members: accessibleMemberIds.length,
     },
-    canManage: access.role === "admin",
+    canManage: access.role !== "leader",
   });
 }
 
@@ -875,9 +875,9 @@ export async function POST(request: Request) {
     });
   }
 
-  if (access.role !== "admin") {
+  if (access.role === "leader") {
     return NextResponse.json(
-      { error: "Apenas administradores podem criar ou editar requisitos." },
+      { error: "Apenas administradores e supervisores podem criar requisitos." },
       { status: 403 }
     );
   }
@@ -948,9 +948,9 @@ export async function PATCH(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  if (access.role !== "admin") {
+  if (access.role === "leader") {
     return NextResponse.json(
-      { error: "Apenas administradores podem editar requisitos." },
+      { error: "Apenas administradores e supervisores podem editar requisitos." },
       { status: 403 }
     );
   }

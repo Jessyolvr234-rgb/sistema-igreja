@@ -164,7 +164,7 @@ export async function GET(request: Request) {
     .eq("role", "leader")
     .eq("is_active", true)
     .order("full_name", { ascending: true });
-  if (access.role !== "admin") {
+  if (access.role === "leader") {
     leaderQuery =
       leaderIds.length > 0
         ? leaderQuery.in("id", leaderIds)

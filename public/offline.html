@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#14243a" />
+    <title>Sem conexão | Rede Êmaús</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f3f6fb;
+        color: #172b4d;
+      }
+      * { box-sizing: border-box; }
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+        place-items: center;
+      }
+      main {
+        width: min(100%, 440px);
+        padding: 36px 28px;
+        border: 1px solid #e3eaf2;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 12px 38px rgba(20, 36, 58, .08);
+        text-align: center;
+      }
+      img { width: min(190px, 70%); height: auto; }
+      h1 { margin: 26px 0 10px; font-size: 24px; }
+      p { margin: 0; color: #63748a; font-size: 14px; line-height: 1.7; }
+      button {
+        min-height: 46px;
+        margin-top: 24px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 10px;
+        color: #fff;
+        background: #315b89;
+        font: inherit;
+        font-weight: 650;
+      }
+      button:focus-visible { outline: 3px solid #729ac5; outline-offset: 3px; }
+      small { display: block; margin-top: 18px; color: #8693a3; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/rede-emaus.png" alt="Rede Êmaús" />
+      <h1>Você está sem conexão</h1>
+      <p>Conecte-se à internet e tente novamente. Por segurança, páginas e informações da sua conta não ficam disponíveis offline.</p>
+      <button type="button" onclick="window.location.reload()">Tentar novamente</button>
+      <small>Nenhum dado privado foi exibido a partir de conteúdo armazenado.</small>
+    </main>
+  </body>
+</html>

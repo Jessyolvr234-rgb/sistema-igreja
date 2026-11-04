@@ -67,16 +67,11 @@ async function loadNetworkData(access: DashboardAccess, networkIds: string[]) {
     };
   }
 
-  const [networkResult, cellResult, assignmentResult] = await Promise.all([
+  const [networkResult, assignmentResult] = await Promise.all([
     adminClient
       .from("networks")
       .select("id, name, description, is_active, created_at")
       .in("id", networkIds)
-      .order("name", { ascending: true }),
-    adminClient
-      .from("cells")
-      .select("id, name, network_id, leader_id, is_active, created_at")
-      .in("network_id", networkIds)
       .order("name", { ascending: true }),
     adminClient
       .from("supervisor_networks")
@@ -84,8 +79,21 @@ async function loadNetworkData(access: DashboardAccess, networkIds: string[]) {
       .in("network_id", networkIds),
   ]);
 
+  let cellQuery = adminClient
+    .from("cells")
+    .select("id, name, network_id, leader_id, is_active, created_at")
+    .in("network_id", networkIds)
+    .order("name", { ascending: true });
+  if (access.role === "leader") {
+    cellQuery = access.cellIds.length
+      ? cellQuery.in("id", access.cellIds)
+      : cellQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
+  const scopedCellResult = await cellQuery;
+
   const firstError =
-    networkResult.error ?? cellResult.error ?? assignmentResult.error;
+    networkResult.error ?? scopedCellResult.error ?? assignmentResult.error;
   if (firstError) {
     return {
       networks: [],
@@ -97,7 +105,7 @@ async function loadNetworkData(access: DashboardAccess, networkIds: string[]) {
     };
   }
 
-  const cells = cellResult.data ?? [];
+  const cells = scopedCellResult.data ?? [];
   const cellIds = cells.map((cell) => cell.id);
   const profileIds = [
     ...new Set([
@@ -247,13 +255,6 @@ export async function GET(request: Request) {
   }
 
   const { access } = result;
-  if (access.role === "leader") {
-    return NextResponse.json(
-      { error: "Líderes não têm permissão para acessar redes." },
-      { status: 403 }
-    );
-  }
-
   const requestedId = new URL(request.url).searchParams.get("id");
   let networkIds = access.networkIds;
 
@@ -271,6 +272,33 @@ export async function GET(request: Request) {
       );
     }
     networkIds = data.map((network) => network.id);
+  } else if (access.role === "leader") {
+    if (access.cellIds.length) {
+      const { data: cells, error } = await access.adminClient
+        .from("cells")
+        .select("network_id")
+        .in("id", access.cellIds);
+      if (error) {
+        console.error("Erro ao consultar redes das células do líder:", error);
+        return NextResponse.json(
+          { error: "Não foi possível carregar as redes autorizadas." },
+          { status: 500 }
+        );
+      }
+      networkIds = [...new Set(cells.map((cell) => cell.network_id))];
+    } else {
+      networkIds = [];
+    }
+
+    if (requestedId && !networkIds.includes(requestedId)) {
+      return NextResponse.json(
+        { error: "Você não tem permissão para acessar esta rede." },
+        { status: 403 }
+      );
+    }
+    if (requestedId) {
+      networkIds = [requestedId];
+    }
   } else if (requestedId) {
     if (!access.networkIds.includes(requestedId)) {
       return NextResponse.json(
@@ -299,7 +327,7 @@ export async function GET(request: Request) {
   }
 
   const { data: activeSupervisors, error: supervisorsError } =
-    access.role === "admin" && !requestedId
+    access.role !== "leader" && !requestedId
       ? await access.adminClient
           .from("profiles")
           .select("id, full_name, email")
@@ -319,7 +347,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     networks: requestedId ? undefined : networks,
     network: requestedId ? networks[0] : undefined,
-    canManage: access.role === "admin",
+    canManage: access.role !== "leader",
     supervisors: (activeSupervisors ?? []).map((profile) => ({
       id: profile.id,
       fullName: profile.full_name,
@@ -339,9 +367,9 @@ export async function POST(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  if (access.role !== "admin") {
+  if (access.role === "leader") {
     return NextResponse.json(
-      { error: "Apenas administradores podem cadastrar redes." },
+      { error: "Líderes não podem cadastrar redes." },
       { status: 403 }
     );
   }
@@ -361,10 +389,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: input }, { status: 400 });
   }
 
-  const supervisorValidation = await validateSupervisors(
-    access,
-    input.supervisorIds
-  );
+  const supervisorIds = [
+    ...new Set([
+      ...input.supervisorIds,
+      ...(access.role === "supervisor" ? [access.userId] : []),
+    ]),
+  ];
+  const supervisorValidation = await validateSupervisors(access, supervisorIds);
   if (supervisorValidation.error) {
     console.error(
       "Erro ao validar supervisores:",
@@ -401,11 +432,11 @@ export async function POST(request: Request) {
   }
 
   let supervisorWarning = "";
-  if (input.supervisorIds.length) {
+  if (supervisorIds.length) {
     const { error } = await access.adminClient
       .from("supervisor_networks")
       .insert(
-        input.supervisorIds.map((supervisorId) => ({
+        supervisorIds.map((supervisorId) => ({
           supervisor_id: supervisorId,
           network_id: network.id,
           created_at: new Date().toISOString(),
@@ -424,7 +455,7 @@ export async function POST(request: Request) {
     entityId: network.id,
     description: `Rede ${network.name} cadastrada.`,
     metadata: {
-      requestedSupervisorIds: input.supervisorIds,
+      requestedSupervisorIds: supervisorIds,
       supervisorAssignmentsSucceeded: !supervisorWarning,
       isActive: input.isActive,
     },
@@ -467,9 +498,9 @@ export async function PATCH(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  if (access.role !== "admin") {
+  if (access.role === "leader") {
     return NextResponse.json(
-      { error: "Apenas administradores podem editar redes." },
+      { error: "Líderes não podem editar redes." },
       { status: 403 }
     );
   }
@@ -490,16 +521,28 @@ export async function PATCH(request: Request) {
       { status: 400 }
     );
   }
+  if (
+    access.role === "supervisor" &&
+    !access.networkIds.includes(body.id)
+  ) {
+    return NextResponse.json(
+      { error: "Você não pode editar redes fora da sua responsabilidade." },
+      { status: 403 }
+    );
+  }
 
   const input = parseNetworkInput(body);
   if (typeof input === "string") {
     return NextResponse.json({ error: input }, { status: 400 });
   }
 
-  const supervisorValidation = await validateSupervisors(
-    access,
-    input.supervisorIds
-  );
+  const supervisorIds = [
+    ...new Set([
+      ...input.supervisorIds,
+      ...(access.role === "supervisor" ? [access.userId] : []),
+    ]),
+  ];
+  const supervisorValidation = await validateSupervisors(access, supervisorIds);
   if (supervisorValidation.error) {
     console.error(
       "Erro ao validar supervisores:",
@@ -554,7 +597,7 @@ export async function PATCH(request: Request) {
   );
   const assignmentsChanged =
     [...previousSupervisorIds].sort().join(",") !==
-    [...input.supervisorIds].sort().join(",");
+    [...supervisorIds].sort().join(",");
 
   const { data: updated, error: updateError } = await access.adminClient
     .from("networks")
@@ -584,11 +627,11 @@ export async function PATCH(request: Request) {
       console.error("Erro ao atualizar vínculos de supervisores:", removeError);
       assignmentWarning =
         "A rede foi atualizada, mas os vínculos dos supervisores não foram alterados.";
-    } else if (input.supervisorIds.length) {
+    } else if (supervisorIds.length) {
       const { error: insertError } = await access.adminClient
         .from("supervisor_networks")
         .insert(
-          input.supervisorIds.map((supervisorId) => ({
+          supervisorIds.map((supervisorId) => ({
             supervisor_id: supervisorId,
             network_id: current.id,
             created_at: new Date().toISOString(),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import PwaInstallButton from "@/components/pwa/pwa-install-button";
 import styles from "./dashboard.module.css";
 
 type SettingsTab =
@@ -332,6 +333,15 @@ export default function SettingsManagement() {
         As configurações são armazenadas em <code>system_settings</code>. Nenhuma
         credencial ou chave secreta é exibida ou editável nesta tela.
       </p>
+
+      <section className={styles.moduleForm} aria-labelledby="pwa-install-title">
+        <h2 id="pwa-install-title">Aplicativo Rede Êmaús</h2>
+        <p>
+          Adicione o sistema à tela inicial ou ao Dock para abrir rapidamente.
+          Os dados privados e as páginas da conta não ficam disponíveis offline.
+        </p>
+        <PwaInstallButton />
+      </section>
 
       <div className={styles.settingsTabs} role="tablist" aria-label="Seções">
         {TABS.map((item) => (
@@ -690,26 +700,38 @@ export default function SettingsManagement() {
                       <tr>
                         <td data-label="Recurso">Redes</td>
                         <td data-label="Administrador">Todas: gerenciar</td>
-                        <td data-label="Supervisor">Atribuídas: consultar</td>
-                        <td data-label="Líder">Sem acesso</td>
+                        <td data-label="Supervisor">
+                          Atribuídas: gerenciar; novas redes vinculadas
+                        </td>
+                        <td data-label="Líder">Rede da célula: consultar</td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Células e membros</td>
                         <td data-label="Administrador">Todas: gerenciar</td>
-                        <td data-label="Supervisor">Redes atribuídas</td>
-                        <td data-label="Líder">Própria célula</td>
+                        <td data-label="Supervisor">
+                          Redes atribuídas: gerenciar
+                        </td>
+                        <td data-label="Líder">
+                          Própria célula: membros gerenciar
+                        </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Frequência</td>
                         <td data-label="Administrador">Todas</td>
                         <td data-label="Supervisor">Redes atribuídas</td>
-                        <td data-label="Líder">Própria célula</td>
+                        <td data-label="Líder">
+                          Própria célula: consultar e registrar
+                        </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Requisitos</td>
                         <td data-label="Administrador">Gerenciar globalmente</td>
-                        <td data-label="Supervisor">Membros das redes</td>
-                        <td data-label="Líder">Membros da célula</td>
+                        <td data-label="Supervisor">
+                          Catálogo global e membros das redes
+                        </td>
+                        <td data-label="Líder">
+                          Consultar/atualizar membros da célula
+                        </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Relatórios</td>
@@ -720,7 +742,7 @@ export default function SettingsManagement() {
                       <tr>
                         <td data-label="Recurso">Usuários e configurações</td>
                         <td data-label="Administrador">Gerenciar</td>
-                        <td data-label="Supervisor">Sem acesso</td>
+                        <td data-label="Supervisor">Gerenciar</td>
                         <td data-label="Líder">Sem acesso</td>
                       </tr>
                     </tbody>

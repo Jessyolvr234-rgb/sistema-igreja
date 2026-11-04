@@ -12,9 +12,12 @@ type Props = {
   children?: ReactNode;
 };
 
+type DashboardRole = "admin" | "supervisor" | "leader";
+
 type HeaderProfile = {
   fullName: string;
   avatarUrl: string | null;
+  role: DashboardRole;
 };
 
 type IconName =
@@ -132,6 +135,8 @@ export default function DashboardShell({ email, children }: Props) {
   const [headerProfile, setHeaderProfile] = useState<HeaderProfile | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const pathname = usePathname();
+  const isAdministrativeUser =
+    headerProfile?.role === "admin" || headerProfile?.role === "supervisor";
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -152,7 +157,13 @@ export default function DashboardShell({ email, children }: Props) {
             profile?: HeaderProfile;
             error?: string;
           };
-          if (!response.ok || !result.profile) {
+          if (
+            !response.ok ||
+            !result.profile ||
+            (result.profile.role !== "admin" &&
+              result.profile.role !== "supervisor" &&
+              result.profile.role !== "leader")
+          ) {
             throw new Error(result.error ?? "Não foi possível carregar o perfil.");
           }
           setHeaderProfile(result.profile);
@@ -170,7 +181,15 @@ export default function DashboardShell({ email, children }: Props) {
         typeof profile?.fullName === "string" &&
         (typeof profile.avatarUrl === "string" || profile.avatarUrl === null)
       ) {
-        setHeaderProfile(profile);
+        setHeaderProfile((current) =>
+          current
+            ? {
+                ...current,
+                fullName: profile.fullName,
+                avatarUrl: profile.avatarUrl,
+              }
+            : current
+        );
       }
     };
 
@@ -227,26 +246,36 @@ export default function DashboardShell({ email, children }: Props) {
         <div className={styles.menuTitle}>MENU PRINCIPAL</div>
 
         <nav className={styles.menu} aria-label="Menu principal">
-          {menuItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`${styles.menuItem} ${
-                  active ? styles.active : ""
-                }`}
-                onClick={() => setMenuOpen(false)}
-                aria-current={active ? "page" : undefined}
-              >
-                <DashboardIcon
-                  name={item.icon}
-                  className={styles.menuIcon}
-                />
-                {item.label}
-              </Link>
-            );
-          })}
+          {menuItems
+            .filter(
+              (item) =>
+                isAdministrativeUser ||
+                ![
+                  "/dashboard/usuarios",
+                  "/dashboard/relatorios",
+                  "/dashboard/configuracoes",
+                ].includes(item.href)
+            )
+            .map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`${styles.menuItem} ${
+                    active ? styles.active : ""
+                  }`}
+                  onClick={() => setMenuOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <DashboardIcon
+                    name={item.icon}
+                    className={styles.menuIcon}
+                  />
+                  {item.label}
+                </Link>
+              );
+            })}
         </nav>
 
         <div className={styles.sidebarFooter}>

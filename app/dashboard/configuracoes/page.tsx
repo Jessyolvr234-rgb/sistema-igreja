@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import DashboardShell from "@/components/dashboard/dashboard-shell";
 import SettingsManagement from "@/components/dashboard/settings-management";
-import { getDashboardAccess } from "@/lib/supabase/dashboard-access";
+import {
+  getDashboardAccess,
+  hasAdministrativeAccess,
+} from "@/lib/supabase/dashboard-access";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ConfiguracoesPage() {
   const access = await getDashboardAccess();
-  if (!access.ok || access.access.role !== "admin") {
+  if (!access.ok || !hasAdministrativeAccess(access.access)) {
     redirect("/dashboard");
   }
 

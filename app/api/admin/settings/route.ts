@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getDashboardAccess,
+  hasAdministrativeAccess,
   type DashboardAccess,
 } from "@/lib/supabase/dashboard-access";
 import { writeAuditLog } from "@/lib/supabase/audit";
@@ -27,10 +28,10 @@ async function authorizeSettings() {
   if (!result.ok) {
     return { response: accessFailure(result) };
   }
-  if (result.access.role !== "admin") {
+  if (!hasAdministrativeAccess(result.access)) {
     return {
       response: NextResponse.json(
-        { error: "Apenas administradores podem acessar as configurações." },
+        { error: "Apenas administradores e supervisores podem acessar as configurações." },
         { status: 403 }
       ),
     };

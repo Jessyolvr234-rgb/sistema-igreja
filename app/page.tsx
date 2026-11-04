@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import PwaInstallButton from "@/components/pwa/pwa-install-button";
 import styles from "./home.module.css";
 
 export default function HomePage() {
@@ -42,6 +43,7 @@ export default function HomePage() {
             <Link className={styles.secondaryButton} href="/criar-conta">
               Criar minha conta
             </Link>
+            <PwaInstallButton variant="home" />
           </div>
           <div className={styles.note}>
             <span aria-hidden="true" />

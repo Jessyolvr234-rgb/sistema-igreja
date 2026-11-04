@@ -33,10 +33,14 @@ async function authorizeAdmin() {
     };
   }
 
-  if (!profile || profile.role !== "admin" || !profile.is_active) {
+  if (
+    !profile ||
+    (profile.role !== "admin" && profile.role !== "supervisor") ||
+    !profile.is_active
+  ) {
     return {
       response: NextResponse.json(
-        { error: "Apenas o administrador pode gerenciar usuários." },
+        { error: "Apenas administradores e supervisores podem gerenciar usuários." },
         { status: 403 }
       ),
     };

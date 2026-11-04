@@ -210,7 +210,7 @@ export default function RequirementsManagement({
   const [successMessage, setSuccessMessage] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [memberRefreshKey, setMemberRefreshKey] = useState(0);
-  const canManage = role === "admin";
+  const canManage = role !== "leader";
 
   const loadRequirements = useCallback(async () => {
     const response = await fetch(

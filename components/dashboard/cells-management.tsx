@@ -318,11 +318,7 @@ export default function CellsManagement({ role }: { role: DashboardRole }) {
       {!loading && data && canManage && data.networks.length === 0 && (
         <p className={styles.moduleNote}>
           Não há redes disponíveis para vincular uma célula.{" "}
-          {role === "admin" ? (
-            <Link href="/dashboard/redes">Cadastre uma rede primeiro.</Link>
-          ) : (
-            "Peça ao administrador para cadastrar uma rede e vinculá-la ao seu perfil."
-          )}
+          <Link href="/dashboard/redes">Cadastre uma rede primeiro.</Link>
         </p>
       )}
 
@@ -360,13 +356,9 @@ export default function CellsManagement({ role }: { role: DashboardRole }) {
           {data?.networks.length === 0 && (
             <div className={styles.moduleError} role="alert">
               A célula precisa pertencer a uma rede.{" "}
-              {role === "admin" ? (
-                <Link href="/dashboard/redes">
-                  Cadastre uma rede e depois volte para concluir este cadastro.
-                </Link>
-              ) : (
-                "Solicite ao administrador que crie ou vincule uma rede ao seu perfil."
-              )}
+              <Link href="/dashboard/redes">
+                Cadastre uma rede e depois volte para concluir este cadastro.
+              </Link>
             </div>
           )}
           <div className={styles.moduleFields}>
