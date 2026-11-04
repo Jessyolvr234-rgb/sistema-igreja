@@ -55,18 +55,29 @@ export async function GET() {
     return authorization.response;
   }
 
-  const { data, error } = await authorization.adminClient
-    .from("profiles")
-    .select("id, full_name, email, role, is_active")
-    .order("full_name", { ascending: true });
+  const [{ data, error }, { data: authUsers, error: authUsersError }] =
+    await Promise.all([
+      authorization.adminClient
+        .from("profiles")
+        .select("id, full_name, email, role, is_active")
+        .order("full_name", { ascending: true }),
+      authorization.adminClient.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      }),
+    ]);
 
-  if (error) {
-    console.error("Erro ao listar usuários:", error);
+  if (error || authUsersError) {
+    console.error("Erro ao listar usuários:", { error, authUsersError });
     return NextResponse.json(
       { error: "Não foi possível carregar os usuários." },
       { status: 500 }
     );
   }
+
+  const authUsersById = new Map(
+    authUsers.users.map((user) => [user.id, user])
+  );
 
   return NextResponse.json({
     users: data.map((profile) => ({
@@ -75,6 +86,14 @@ export async function GET() {
       email: profile.email,
       role: profile.role,
       isActive: profile.is_active,
+      approvalStatus:
+        authUsersById.get(profile.id)?.app_metadata?.approval_status ===
+        "pending"
+          ? "pending"
+          : authUsersById.get(profile.id)?.app_metadata?.approval_status ===
+              "rejected"
+            ? "rejected"
+            : null,
     })),
   });
 }
@@ -207,6 +226,7 @@ export async function POST(request: Request) {
         email,
         role,
         isActive: true,
+        approvalStatus: null,
       },
     },
     { status: 201 }
@@ -240,11 +260,14 @@ export async function PATCH(request: Request) {
   const userId = typeof input.userId === "string" ? input.userId : "";
   const isActive = input.isActive;
   const role = input.role;
+  const action = input.action;
   if (
     !userId ||
-    (isActive === undefined && role === undefined) ||
+    (isActive === undefined && role === undefined && action === undefined) ||
     (isActive !== undefined && typeof isActive !== "boolean") ||
-    (role !== undefined && role !== "supervisor" && role !== "leader")
+    (role !== undefined && role !== "supervisor" && role !== "leader") ||
+    (action !== undefined && action !== "approve" && action !== "reject") ||
+    (action !== undefined && (isActive !== undefined || role !== undefined))
   ) {
     return NextResponse.json(
       { error: "Informe um usuário e alterações válidas." },
@@ -278,6 +301,8 @@ export async function PATCH(request: Request) {
   }
 
   const changes: { is_active?: boolean; role?: "supervisor" | "leader" } = {};
+  if (action === "approve") changes.is_active = true;
+  if (action === "reject") changes.is_active = false;
   if (typeof isActive === "boolean") {
     changes.is_active = isActive;
   }
@@ -297,6 +322,54 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (action === "approve" || action === "reject") {
+    const { data: authTarget, error: authTargetError } =
+      await authorization.adminClient.auth.admin.getUserById(userId);
+    if (authTargetError || !authTarget.user) {
+      console.error("Erro ao consultar conta para aprovação:", authTargetError);
+      const { error: rollbackError } = await authorization.adminClient
+        .from("profiles")
+        .update({ is_active: target.is_active })
+        .eq("id", userId);
+      if (rollbackError) {
+        console.error(
+          "Erro ao restaurar situação do usuário:",
+          rollbackError
+        );
+      }
+      return NextResponse.json(
+        { error: "Não foi possível atualizar a solicitação de acesso." },
+        { status: 500 }
+      );
+    }
+
+    const { error: metadataError } =
+      await authorization.adminClient.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          ...authTarget.user.app_metadata,
+          approval_status: action === "approve" ? "approved" : "rejected",
+        },
+      });
+
+    if (metadataError) {
+      console.error("Erro ao atualizar situação da solicitação:", metadataError);
+      const { error: rollbackError } = await authorization.adminClient
+        .from("profiles")
+        .update({ is_active: target.is_active })
+        .eq("id", userId);
+      if (rollbackError) {
+        console.error(
+          "Erro ao restaurar situação do usuário:",
+          rollbackError
+        );
+      }
+      return NextResponse.json(
+        { error: "Não foi possível atualizar a solicitação de acesso." },
+        { status: 500 }
+      );
+    }
+  }
+
   const changedFields = Object.keys(changes);
   const { error: auditError } = await authorization.adminClient
     .from("audit_logs")
@@ -309,6 +382,7 @@ export async function PATCH(request: Request) {
       metadata: {
         previous: { role: target.role, isActive: target.is_active },
         changes,
+        ...(action ? { approvalAction: action } : {}),
       },
     });
   if (auditError) {
@@ -326,6 +400,12 @@ export async function PATCH(request: Request) {
       fullName: target.full_name,
       role: changes.role ?? target.role,
       isActive: changes.is_active ?? target.is_active,
+      approvalStatus:
+        action === "approve"
+          ? "approved"
+          : action === "reject"
+            ? "rejected"
+            : null,
     },
     changedFields,
   });

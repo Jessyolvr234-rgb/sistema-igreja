@@ -11,6 +11,7 @@ type User = {
   email: string;
   role: UserRole | "admin";
   isActive: boolean;
+  approvalStatus: "pending" | "approved" | "rejected" | null;
 };
 
 function getApiError(payload: unknown, fallback: string) {
@@ -36,7 +37,8 @@ function isUser(value: unknown): value is User {
     !("fullName" in value) ||
     !("email" in value) ||
     !("role" in value) ||
-    !("isActive" in value)
+    !("isActive" in value) ||
+    !("approvalStatus" in value)
   ) {
     return false;
   }
@@ -48,7 +50,11 @@ function isUser(value: unknown): value is User {
     (value.role === "admin" ||
       value.role === "supervisor" ||
       value.role === "leader") &&
-    typeof value.isActive === "boolean"
+    typeof value.isActive === "boolean" &&
+    (value.approvalStatus === null ||
+      value.approvalStatus === "pending" ||
+      value.approvalStatus === "approved" ||
+      value.approvalStatus === "rejected")
   );
 }
 
@@ -77,6 +83,7 @@ export default function UsersManagement() {
   const [role, setRole] = useState<UserRole>("leader");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -194,13 +201,65 @@ export default function UsersManagement() {
     }
   }
 
+  async function handleApproval(user: User, action: "approve" | "reject") {
+    if (
+      action === "reject" &&
+      !window.confirm(`Deseja recusar a solicitação de ${user.fullName}?`)
+    ) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setApprovingUserId(user.id);
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, action }),
+      });
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          getApiError(payload, "Não foi possível atualizar a solicitação.")
+        );
+      }
+
+      setUsers((currentUsers) =>
+        currentUsers.map((current) =>
+          current.id === user.id
+            ? {
+                ...current,
+                isActive: action === "approve",
+                approvalStatus: action === "approve" ? "approved" : "rejected",
+              }
+            : current
+        )
+      );
+      setSuccessMessage(
+        action === "approve"
+          ? `Acesso de ${user.fullName} aprovado.`
+          : `Solicitação de ${user.fullName} recusada.`
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar a solicitação."
+      );
+    } finally {
+      setApprovingUserId(null);
+    }
+  }
+
   return (
     <section className={styles.usersPage} aria-labelledby="users-title">
       <div className={styles.usersHeading}>
         <div>
           <span className={styles.usersEyebrow}>ADMINISTRAÇÃO</span>
           <h1 id="users-title">Usuários</h1>
-          <p>Cadastre e consulte os acessos de supervisores e líderes.</p>
+          <p>Gerencie contas e solicitações de acesso à plataforma.</p>
         </div>
         <button
           type="button"
@@ -238,7 +297,7 @@ export default function UsersManagement() {
           <div className={styles.userFormHeading}>
             <div>
               <h2>Cadastrar usuário</h2>
-              <p>O acesso será criado imediatamente.</p>
+              <p>Contas cadastradas aqui recebem acesso imediato.</p>
             </div>
           </div>
 
@@ -353,6 +412,7 @@ export default function UsersManagement() {
                   <th scope="col">E-mail</th>
                   <th scope="col">Perfil</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -366,13 +426,52 @@ export default function UsersManagement() {
                     <td data-label="Status">
                       <span
                         className={`${styles.userStatus} ${
-                          user.isActive
+                          user.approvalStatus === "pending"
+                            ? styles.userStatusPending
+                            : user.approvalStatus === "rejected"
+                              ? styles.userStatusInactive
+                              : user.isActive
                             ? styles.userStatusActive
                             : styles.userStatusInactive
                         }`}
                       >
-                        {user.isActive ? "Ativo" : "Inativo"}
+                        {user.approvalStatus === "pending"
+                          ? "Aguardando aprovação"
+                          : user.approvalStatus === "rejected"
+                            ? "Solicitação recusada"
+                            : user.isActive
+                              ? "Ativo"
+                              : "Inativo"}
                       </span>
+                    </td>
+                    <td data-label="Ações">
+                      {user.approvalStatus === "pending" ||
+                      user.approvalStatus === "rejected" ? (
+                        <div className={styles.userApprovalActions}>
+                          <button
+                            className={styles.userApproveButton}
+                            onClick={() => void handleApproval(user, "approve")}
+                            disabled={approvingUserId !== null}
+                            type="button"
+                          >
+                            {approvingUserId === user.id
+                              ? "Atualizando..."
+                              : "Aprovar"}
+                          </button>
+                          {user.approvalStatus === "pending" && (
+                            <button
+                              className={styles.userRejectButton}
+                              onClick={() => void handleApproval(user, "reject")}
+                              disabled={approvingUserId !== null}
+                              type="button"
+                            >
+                              Recusar
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))}

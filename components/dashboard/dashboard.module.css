@@ -56,6 +56,10 @@
   margin-top: 4px;
   color: #aab8ca;
   font-size: 11px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 }
 
 .menuTitle {
@@ -125,12 +129,46 @@
 
 .sidebarFooter {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
   margin-top: auto;
   padding: 18px 10px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   color: #aab8ca;
   font-size: 11px;
+}
+
+.sidebarStatus {
+  display: flex;
+  align-items: center;
+}
+
+.sidebarSignOut {
+  width: 100%;
+  min-height: 39px;
+  padding: 0 12px;
+  border: 1px solid rgba(203, 217, 232, 0.22);
+  border-radius: 9px;
+  color: #d7e1ed;
+  background: rgba(255, 255, 255, 0.055);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.sidebarSignOut:hover {
+  border-color: rgba(203, 217, 232, 0.4);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.profileLink:hover .userInfo strong {
+  color: #315b89;
 }
 
 .statusDot {
@@ -183,7 +221,23 @@
   gap: 12px;
 }
 
+.profileLink {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.profileLink:focus-visible {
+  outline: 3px solid rgba(87, 136, 190, 0.6);
+  outline-offset: 4px;
+}
+
 .avatar {
+  position: relative;
+  overflow: hidden;
   display: grid;
   width: 40px;
   height: 40px;
@@ -196,6 +250,10 @@
   box-shadow: 0 2px 6px rgba(36, 74, 115, 0.18);
   font-size: 13px;
   font-weight: 700;
+}
+
+.avatarImage {
+  object-fit: cover;
 }
 
 .userInfo {
@@ -458,6 +516,7 @@
 .menuItem:focus-visible,
 .menuButton:focus-visible,
 .signOut:focus-visible,
+.sidebarSignOut:focus-visible,
 .actionButton:focus-visible {
   outline: 3px solid #79a3d0;
   outline-offset: 3px;
@@ -478,6 +537,7 @@
     width: 280px;
     height: 100dvh;
     min-height: 0;
+    overflow-y: auto;
     transform: translateX(-100%);
     transition: transform 220ms ease;
     box-shadow: 16px 0 35px rgba(10, 22, 38, 0.18);
@@ -531,6 +591,10 @@
 
   .userInfo {
     display: none;
+  }
+
+  .profileLink {
+    gap: 0;
   }
 
   .signOut {
@@ -857,6 +921,48 @@
   background: #fff5e7;
 }
 
+.userStatusPending {
+  color: #315b89;
+  background: #edf4fb;
+}
+
+.userApprovalActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userApprovalActions button {
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.userApprovalActions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.userApproveButton {
+  color: #24704a;
+}
+
+.userApproveButton:hover:not(:disabled) {
+  background: #eaf6ef;
+}
+
+.userRejectButton {
+  color: #9c3d3d;
+}
+
+.userRejectButton:hover:not(:disabled) {
+  background: #fff0f0;
+}
+
 .userListMessage {
   padding: 34px 18px;
   color: #8390a1;
@@ -890,6 +996,50 @@
 }
 
 @media (max-width: 560px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+
+  .statCard {
+    display: flex;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .statLabel {
+    min-height: 0;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .statIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .statIcon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .statValue {
+    margin-top: auto;
+    padding-top: 12px;
+    font-size: clamp(24px, 8vw, 30px);
+  }
+
+  .statCard small {
+    margin-top: 4px;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
   .usersHeading,
   .userListHeader,
   .userFormFooter {
@@ -2115,5 +2265,1240 @@
   .moduleStat {
     box-shadow: none;
     break-inside: avoid;
+  }
+}
+
+.dashboard {
+  --dashboard-navy: #14243a;
+  --dashboard-blue: #315b89;
+  --dashboard-muted: #718096;
+  --dashboard-border: #e3eaf2;
+  color: #23334a;
+  background:
+    radial-gradient(ellipse at 82% -8%, rgba(86, 126, 172, 0.075), transparent 34rem),
+    #f3f6fb;
+  font-family: Inter, var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+.sidebar {
+  width: 272px;
+  flex-basis: 272px;
+  padding: 30px 17px 22px;
+  border-right: 1px solid rgba(255, 255, 255, 0.055);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(91, 131, 177, 0.2), transparent 23rem),
+    linear-gradient(180deg, #14243a 0%, #101f33 100%);
+}
+
+.logo {
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.logoImage {
+  width: 104px;
+}
+
+.logoText {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.logoSubtitle {
+  font-size: 10px;
+}
+
+.menuTitle {
+  margin-bottom: 11px;
+  letter-spacing: 1.5px;
+}
+
+.menu {
+  gap: 4px;
+}
+
+.menuItem {
+  min-height: 46px;
+  gap: 13px;
+  padding: 0 13px;
+  border-radius: 10px;
+  color: #bdc9d8;
+  font-size: 12px;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.active,
+.active:hover {
+  border-color: rgba(153, 191, 231, 0.18);
+  background: linear-gradient(105deg, #315b89 0%, #294b72 100%);
+  box-shadow: 0 7px 18px rgba(5, 15, 29, 0.2);
+}
+
+.menuIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebarFooter {
+  padding: 17px 10px 0;
+  font-size: 10px;
+}
+
+.sidebarSignOut {
+  min-height: 40px;
+  border-color: rgba(203, 217, 232, 0.2);
+}
+
+.sidebarSignOut:focus-visible {
+  outline: 3px solid #79a3d0;
+  outline-offset: 3px;
+}
+
+.header {
+  min-height: 82px;
+  border-bottom-color: #e6ecf3;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 18px rgba(20, 36, 58, 0.035);
+}
+
+.headerTitle {
+  font-size: 17px;
+  letter-spacing: -0.35px;
+}
+
+.headerSubtitle {
+  color: #8996a8;
+  font-size: 10px;
+}
+
+.avatar {
+  border: 3px solid #eef3f8;
+  background: linear-gradient(145deg, #527eac, #244a73);
+  box-shadow: none;
+}
+
+.signOut {
+  min-height: 37px;
+  border-color: #e1e8f0;
+  border-radius: 9px;
+  color: #385b82;
+  font-size: 11px;
+}
+
+.content {
+  width: min(100%, 1580px);
+  padding: clamp(26px, 3.2vw, 46px) clamp(22px, 3.3vw, 52px) 54px;
+}
+
+.welcome {
+  border-color: rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 92% 10%, rgba(150, 185, 222, 0.23), transparent 22rem),
+    linear-gradient(115deg, #14243a 0%, #203e62 60%, #315b89 100%);
+  box-shadow: 0 14px 34px rgba(20, 36, 58, 0.14);
+}
+
+.welcome::after {
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.statCard,
+.section {
+  border-color: #e5ebf2;
+  border-radius: 15px;
+  box-shadow: 0 7px 22px rgba(20, 36, 58, 0.045);
+}
+
+.statCard {
+  overflow: hidden;
+  isolation: isolate;
+  padding: 21px;
+  animation: cardEnter 520ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.statCard::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(135deg, var(--stat-tint, #ffffff), #ffffff 78%);
+  content: "";
+  opacity: 0.7;
+  transition: opacity 220ms ease;
+}
+
+.statCard::after {
+  position: absolute;
+  z-index: -1;
+  top: -50px;
+  right: -44px;
+  width: 130px;
+  height: 130px;
+  border: 1px solid color-mix(in srgb, var(--stat-accent, #315b89) 18%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 16px color-mix(in srgb, var(--stat-accent, #315b89) 5%, transparent),
+    0 0 0 34px color-mix(in srgb, var(--stat-accent, #315b89) 3%, transparent);
+  content: "";
+  transition: transform 280ms ease;
+}
+
+.statCard:nth-child(4n + 1) {
+  --stat-accent: #4776a8;
+  --stat-tint: #eaf3fc;
+  animation-delay: 40ms;
+}
+
+.statCard:nth-child(4n + 2) {
+  --stat-accent: #27947e;
+  --stat-tint: #e9f8f3;
+  animation-delay: 100ms;
+}
+
+.statCard:nth-child(4n + 3) {
+  --stat-accent: #bd8a38;
+  --stat-tint: #fff6e8;
+  animation-delay: 160ms;
+}
+
+.statCard:nth-child(4n) {
+  --stat-accent: #8a69b0;
+  --stat-tint: #f3edfb;
+  animation-delay: 220ms;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--stat-accent, #315b89) 32%, #ffffff);
+  box-shadow: 0 16px 30px rgba(20, 36, 58, 0.11);
+}
+
+.statCard:hover::before {
+  opacity: 1;
+}
+
+.statCard:hover::after {
+  transform: scale(1.12) translate(-5px, 5px);
+}
+
+.statIcon {
+  width: 37px;
+  height: 37px;
+  border-radius: 11px;
+  color: var(--stat-accent, #315b89);
+  background: color-mix(in srgb, var(--stat-accent, #315b89) 12%, #ffffff);
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    transform 200ms ease;
+}
+
+.statCard:hover .statIcon {
+  color: #ffffff;
+  background: var(--stat-accent, #315b89);
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.statValue {
+  color: #14243a;
+  font-size: 29px;
+  transition: color 200ms ease;
+}
+
+.statCard:hover .statValue {
+  color: var(--stat-accent, #315b89);
+}
+
+.section {
+  padding: 24px;
+}
+
+.section h2 {
+  font-size: 15px;
+}
+
+.activity {
+  border-color: #dfe7f0;
+  border-radius: 11px;
+  background: #f8fafd;
+}
+
+.actionButton {
+  min-height: 43px;
+  border-color: #e1e8f0;
+  border-radius: 10px;
+}
+
+.modulePage,
+.usersPage {
+  gap: 22px;
+}
+
+.moduleHeading h1,
+.usersHeading h1 {
+  color: #172b4d;
+  font-size: clamp(25px, 2.4vw, 32px);
+  letter-spacing: -0.85px;
+}
+
+.moduleHeading p,
+.usersHeading p,
+.userListHeader p,
+.userFormHeading p,
+.userFormFooter p {
+  color: #78879b;
+  font-size: 12px;
+}
+
+.moduleEyebrow,
+.usersEyebrow {
+  color: #6988aa;
+  font-size: 9px;
+  letter-spacing: 1.55px;
+}
+
+.modulePrimaryButton,
+.createUserButton {
+  min-height: 42px;
+  padding-inline: 17px;
+  border-color: #244a73;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #315b89, #244a73);
+  box-shadow: 0 5px 13px rgba(36, 74, 115, 0.16);
+  font-size: 11px;
+}
+
+.modulePrimaryButton:hover:not(:disabled),
+.createUserButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #172b4d;
+  box-shadow: 0 8px 18px rgba(36, 74, 115, 0.2);
+}
+
+.moduleSecondaryButton {
+  min-height: 40px;
+  padding-inline: 15px;
+  border-color: #dce5ee;
+  border-radius: 10px;
+  color: #465d79;
+  font-size: 11px;
+}
+
+.moduleError,
+.moduleSuccess,
+.usersAlertError,
+.usersAlertSuccess {
+  padding: 14px 16px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.memberStats,
+.networkStats,
+.reportMetrics,
+.memberRequirementStats {
+  gap: 14px;
+}
+
+.moduleStat {
+  position: relative;
+  overflow: hidden;
+  gap: 14px;
+  padding: 19px;
+  border-color: #e5ebf2;
+  border-radius: 14px;
+  box-shadow: 0 7px 21px rgba(20, 36, 58, 0.04);
+  animation: cardEnter 480ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.moduleStat::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: inherit;
+  background: var(--metric-accent, #4776a8);
+  content: "";
+}
+
+.moduleStat:nth-child(4n + 1) {
+  --metric-accent: #4776a8;
+  animation-delay: 40ms;
+}
+
+.moduleStat:nth-child(4n + 2) {
+  --metric-accent: #27947e;
+  animation-delay: 90ms;
+}
+
+.moduleStat:nth-child(4n + 3) {
+  --metric-accent: #bd8a38;
+  animation-delay: 140ms;
+}
+
+.moduleStat:nth-child(4n) {
+  --metric-accent: #8a69b0;
+  animation-delay: 190ms;
+}
+
+.moduleStat:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--metric-accent) 25%, #ffffff);
+  box-shadow: 0 13px 25px rgba(20, 36, 58, 0.085);
+}
+
+.moduleStat span {
+  color: #748399;
+  font-size: 10px;
+}
+
+.moduleStat strong {
+  color: #14243a;
+  font-size: 27px;
+  letter-spacing: -0.7px;
+  transition: color 180ms ease;
+}
+
+.moduleStat:hover strong {
+  color: var(--metric-accent);
+}
+
+.moduleForm,
+.networkDetails,
+.moduleTableCard,
+.userForm,
+.userTableCard,
+.memberRequirementCard {
+  border-color: #e4eaf2;
+  border-radius: 15px;
+  box-shadow: 0 7px 24px rgba(20, 36, 58, 0.045);
+}
+
+.moduleForm,
+.networkDetails,
+.userForm {
+  padding: 25px;
+}
+
+.moduleFormHeading h2,
+.networkDetails h2,
+.userFormHeading h2,
+.userListHeader h2,
+.reportGrid h2,
+.moduleForm > h2 {
+  color: #20334d;
+  font-size: 16px;
+  letter-spacing: -0.25px;
+}
+
+.moduleSectionTitle {
+  margin-top: 25px;
+  padding-bottom: 11px;
+  border-bottom-color: #e9eef4;
+  color: #344a66;
+  font-size: 12px;
+}
+
+.moduleFields,
+.userFormFields {
+  gap: 17px;
+}
+
+.moduleField,
+.userField {
+  gap: 8px;
+}
+
+.moduleField > span,
+.userField > span {
+  color: #435670;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.moduleField input,
+.moduleField select,
+.moduleField textarea,
+.filterField select,
+.moduleSearch input,
+.userField input,
+.userField select,
+.userSearch input,
+.moduleAttendanceSelect,
+.settingsUserActions select {
+  min-height: 43px;
+  padding: 10px 12px;
+  border-color: #dce5ee;
+  border-radius: 10px;
+  color: #25364d;
+  background-color: #ffffff;
+  font-size: 11px;
+}
+
+.moduleField textarea {
+  min-height: 92px;
+}
+
+.moduleField input:focus,
+.moduleField select:focus,
+.moduleField textarea:focus,
+.filterField select:focus,
+.moduleSearch input:focus,
+.userField input:focus,
+.userField select:focus,
+.userSearch input:focus,
+.moduleAttendanceSelect:focus,
+.settingsUserActions select:focus {
+  border-color: #7192b5;
+  box-shadow: 0 0 0 3px rgba(49, 91, 137, 0.12);
+}
+
+.moduleNote,
+.moduleField > small {
+  color: #8391a3;
+  font-size: 10px;
+}
+
+.moduleFormActions,
+.userFormFooter {
+  margin-top: 21px;
+  padding-top: 18px;
+  border-top-color: #e9eef4;
+}
+
+.historyList li,
+.networkPeopleList li,
+.requirementMemberResults li {
+  padding: 14px 15px;
+  border-color: #e8edf3;
+  border-radius: 10px;
+  background: #f9fbfd;
+}
+
+.historyList strong,
+.networkPeopleList strong {
+  color: #2e4562;
+  font-size: 11px;
+}
+
+.memberFilters,
+.networkFilters,
+.moduleAttendanceFilters,
+.requirementMemberFilters {
+  gap: 11px;
+}
+
+.moduleTableCard,
+.userTableCard {
+  overflow: hidden;
+}
+
+.moduleTable th,
+.userTable th {
+  padding: 14px 15px;
+  border-bottom-color: #e7edf4;
+  color: #708097;
+  background: #f7f9fc;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+.moduleTable td,
+.userTable td {
+  padding: 15px;
+  border-bottom-color: #edf1f5;
+  color: #5e6f84;
+  font-size: 10px;
+}
+
+.moduleTable tbody tr:hover,
+.userTable tbody tr:hover {
+  background: #f8fafd;
+}
+
+.moduleName,
+.userName {
+  color: #263b56;
+  font-size: 11px;
+}
+
+.moduleSubtext {
+  color: #8794a5;
+  font-size: 9px;
+}
+
+.moduleBadge,
+.userStatus {
+  min-height: 25px;
+  padding-inline: 10px;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.moduleBadgeActive,
+.userStatusActive {
+  color: #24704a;
+  background: #eaf6ef;
+}
+
+.moduleBadgeInactive,
+.userStatusInactive {
+  color: #8a5a23;
+  background: #fff5e7;
+}
+
+.moduleTextButton {
+  color: #315b89;
+  font-size: 10px;
+}
+
+.modulePagination {
+  color: #748399;
+  font-size: 10px;
+}
+
+.networkDetailStats > div {
+  gap: 8px;
+  padding: 15px;
+  border: 1px solid #e8edf3;
+  border-radius: 11px;
+  background: #f8fafd;
+}
+
+.networkDetailStats span {
+  color: #7d8ba0;
+  font-size: 9px;
+}
+
+.networkDetailStats strong {
+  color: #263b56;
+  font-size: 12px;
+}
+
+.settingsTabs,
+.memberProfileTabs {
+  gap: 5px;
+  padding: 6px;
+  border-color: #e3eaf2;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(20, 36, 58, 0.035);
+}
+
+.settingsTab {
+  min-height: 40px;
+  padding-inline: 15px;
+  border-radius: 9px;
+  color: #66778d;
+  font-size: 10px;
+}
+
+.settingsTabActive {
+  border-color: #d9e4f0;
+  color: #244a73;
+  background: #eff4f9;
+}
+
+.memberRequirementCard {
+  padding: 20px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.memberRequirementCard:hover {
+  transform: translateY(-2px);
+  border-color: #d5e0ec;
+  box-shadow: 0 12px 26px rgba(20, 36, 58, 0.075);
+}
+
+.memberRequirementTitle h4 {
+  color: #263b56;
+  font-size: 13px;
+}
+
+.memberRequirementFields {
+  gap: 16px;
+}
+
+.memberRequirementFooter,
+.memberRequirementHistory {
+  border-top-color: #e9eef4;
+}
+
+.memberRequirementFooter > span {
+  color: #7c8ba0;
+  font-size: 10px;
+}
+
+.memberArchivedRequirements {
+  padding: 20px;
+  border-color: #e4eaf2;
+  border-radius: 13px;
+  background: #f8fafd;
+}
+
+.reportFilters {
+  gap: 13px;
+  padding: 18px;
+  border-color: #e4eaf2;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(20, 36, 58, 0.04);
+}
+
+.reportBarTrack {
+  background: #edf2f7;
+}
+
+.reportBarTrack span {
+  background: linear-gradient(180deg, #638ab5, #315b89);
+}
+
+.userForm,
+.userTableCard {
+  border-radius: 15px;
+}
+
+.userForm {
+  padding: 25px;
+}
+
+.userTable th {
+  padding-inline: 18px;
+}
+
+.userTable td {
+  padding-inline: 18px;
+}
+
+.moduleEmpty,
+.userListMessage {
+  padding: 42px 20px;
+  color: #7d8ba0;
+  font-size: 11px;
+}
+
+.menuItem:focus-visible,
+.menuButton:focus-visible,
+.signOut:focus-visible,
+.actionButton:focus-visible,
+.modulePrimaryButton:focus-visible,
+.moduleSecondaryButton:focus-visible,
+.moduleTextButton:focus-visible,
+.createUserButton:focus-visible,
+.settingsTab:focus-visible {
+  outline: 3px solid rgba(87, 136, 190, 0.6);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    width: min(300px, 86vw);
+    padding: 25px 16px 20px;
+  }
+
+  .header {
+    min-height: 72px;
+  }
+
+  .content {
+    padding: 23px 18px 34px;
+  }
+
+  .modulePage,
+  .usersPage {
+    gap: 17px;
+  }
+
+  .moduleForm,
+  .networkDetails,
+  .userForm {
+    padding: 19px;
+  }
+
+  .moduleStat {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .content {
+    padding: 20px 14px 30px;
+  }
+
+  .moduleHeading h1,
+  .usersHeading h1 {
+    font-size: 25px;
+  }
+
+  .moduleHeading p,
+  .usersHeading p {
+    max-width: 38ch;
+    font-size: 11px;
+  }
+
+  .moduleForm,
+  .networkDetails,
+  .userForm {
+    padding: 16px;
+    border-radius: 13px;
+  }
+
+  .moduleTable tr {
+    padding: 12px 14px;
+  }
+
+  .moduleTable td {
+    grid-template-columns: minmax(84px, 0.38fr) minmax(0, 1fr);
+    font-size: 10px;
+  }
+
+  .reportActions button {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .settingsTabs,
+  .memberProfileTabs {
+    margin-inline: -2px;
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statCard,
+  .moduleStat,
+  .memberRequirementCard,
+  .modulePrimaryButton,
+  .createUserButton {
+    animation: none;
+    transition: none;
+  }
+
+  .statCard:hover,
+  .moduleStat:hover,
+  .memberRequirementCard:hover,
+  .modulePrimaryButton:hover:not(:disabled),
+  .createUserButton:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .statCard:hover::after,
+  .statCard:hover .statIcon {
+    transform: none;
+  }
+}
+
+.themeToggle {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #e1e8f0;
+  border-radius: 10px;
+  color: #526982;
+  background: #ffffff;
+  transition:
+    transform 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.themeToggle:hover {
+  transform: translateY(-1px);
+  border-color: #cbd9e8;
+  color: #244a73;
+  background: #f5f8fc;
+}
+
+.themeToggle:focus-visible {
+  outline: 3px solid rgba(87, 136, 190, 0.6);
+  outline-offset: 3px;
+}
+
+.dashboard[data-theme="dark"] {
+  color-scheme: dark;
+  --dashboard-navy: #0c1726;
+  --dashboard-blue: #83b3e4;
+  --dashboard-muted: #a0afc2;
+  --dashboard-border: #2b3a4e;
+  color: #e4ebf4;
+  background:
+    radial-gradient(ellipse at 82% -8%, rgba(71, 111, 157, 0.14), transparent 34rem),
+    #0d1725;
+}
+
+.dashboard[data-theme="dark"] .sidebar {
+  border-right-color: #26364a;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(70, 111, 158, 0.17), transparent 23rem),
+    linear-gradient(180deg, #101d2e 0%, #0c1726 100%);
+}
+
+.dashboard[data-theme="dark"] .sidebarFooter {
+  border-top-color: #29394e;
+}
+
+.dashboard[data-theme="dark"] .sidebarSignOut {
+  border-color: #33465d;
+  color: #c1d0e1;
+  background: #1a2a3e;
+}
+
+.dashboard[data-theme="dark"] .sidebarSignOut:hover {
+  border-color: #52749b;
+  color: #ffffff;
+  background: #243a54;
+}
+
+.dashboard[data-theme="dark"] .header {
+  border-bottom-color: #29394e;
+  background: rgba(17, 29, 45, 0.95);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
+}
+
+.dashboard[data-theme="dark"] .headerTitle,
+.dashboard[data-theme="dark"] .userInfo strong {
+  color: #e8eef6;
+}
+
+.dashboard[data-theme="dark"] .headerSubtitle,
+.dashboard[data-theme="dark"] .userInfo span,
+.dashboard[data-theme="dark"] .sidebarFooter {
+  color: #94a5ba;
+}
+
+.dashboard[data-theme="dark"] .avatar {
+  border-color: #263b55;
+  background: linear-gradient(145deg, #4776a8, #203e62);
+}
+
+.dashboard[data-theme="dark"] .themeToggle,
+.dashboard[data-theme="dark"] .signOut,
+.dashboard[data-theme="dark"] .menuButton {
+  border-color: #33465d;
+  color: #c1d0e1;
+  background: #1a2a3e;
+}
+
+.dashboard[data-theme="dark"] .themeToggle:hover,
+.dashboard[data-theme="dark"] .signOut:hover,
+.dashboard[data-theme="dark"] .menuButton:hover {
+  border-color: #52749b;
+  color: #ffffff;
+  background: #243a54;
+}
+
+.dashboard[data-theme="dark"] .content {
+  color: #dce5ef;
+}
+
+.dashboard[data-theme="dark"] .statCard,
+.dashboard[data-theme="dark"] .section,
+.dashboard[data-theme="dark"] .moduleStat,
+.dashboard[data-theme="dark"] .moduleForm,
+.dashboard[data-theme="dark"] .networkDetails,
+.dashboard[data-theme="dark"] .moduleTableCard,
+.dashboard[data-theme="dark"] .userForm,
+.dashboard[data-theme="dark"] .userTableCard,
+.dashboard[data-theme="dark"] .memberRequirementCard {
+  border-color: #2b3a4e;
+  background-color: #172538;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard[data-theme="dark"] .statCard::before {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--stat-accent, #4776a8) 22%, #172538),
+    #172538 82%
+  );
+}
+
+.dashboard[data-theme="dark"] .statLabel,
+.dashboard[data-theme="dark"] .moduleStat span,
+.dashboard[data-theme="dark"] .sectionDescription,
+.dashboard[data-theme="dark"] .statCard small,
+.dashboard[data-theme="dark"] .moduleHeading p,
+.dashboard[data-theme="dark"] .usersHeading p,
+.dashboard[data-theme="dark"] .userListHeader p,
+.dashboard[data-theme="dark"] .userFormHeading p,
+.dashboard[data-theme="dark"] .userFormFooter p,
+.dashboard[data-theme="dark"] .moduleNote,
+.dashboard[data-theme="dark"] .moduleField > small,
+.dashboard[data-theme="dark"] .memberRequirementHeading p,
+.dashboard[data-theme="dark"] .memberArchivedRequirements > p,
+.dashboard[data-theme="dark"] .memberRequirementFooter > span,
+.dashboard[data-theme="dark"] .reportGenerated,
+.dashboard[data-theme="dark"] .modulePagination,
+.dashboard[data-theme="dark"] .moduleEmpty,
+.dashboard[data-theme="dark"] .userListMessage {
+  color: #a0afc2;
+}
+
+.dashboard[data-theme="dark"] .statValue,
+.dashboard[data-theme="dark"] .moduleStat strong,
+.dashboard[data-theme="dark"] .section h2,
+.dashboard[data-theme="dark"] .moduleHeading h1,
+.dashboard[data-theme="dark"] .usersHeading h1,
+.dashboard[data-theme="dark"] .moduleFormHeading h2,
+.dashboard[data-theme="dark"] .networkDetails h2,
+.dashboard[data-theme="dark"] .userFormHeading h2,
+.dashboard[data-theme="dark"] .userListHeader h2,
+.dashboard[data-theme="dark"] .reportGrid h2,
+.dashboard[data-theme="dark"] .moduleForm > h2,
+.dashboard[data-theme="dark"] .memberRequirementHeading h3,
+.dashboard[data-theme="dark"] .memberArchivedRequirements h3,
+.dashboard[data-theme="dark"] .memberRequirementTitle h4 {
+  color: #e7eef7;
+}
+
+.dashboard[data-theme="dark"] .activity,
+.dashboard[data-theme="dark"] .historyList li,
+.dashboard[data-theme="dark"] .networkPeopleList li,
+.dashboard[data-theme="dark"] .requirementMemberResults li,
+.dashboard[data-theme="dark"] .requirementCurrentAnswer,
+.dashboard[data-theme="dark"] .networkDetailStats > div,
+.dashboard[data-theme="dark"] .memberArchivedRequirements {
+  border-color: #2b3c52;
+  color: #c1cede;
+  background: #1b2b40;
+}
+
+.dashboard[data-theme="dark"] .moduleSectionTitle,
+.dashboard[data-theme="dark"] .moduleFormActions,
+.dashboard[data-theme="dark"] .userFormFooter,
+.dashboard[data-theme="dark"] .memberRequirementFooter,
+.dashboard[data-theme="dark"] .memberRequirementHistory,
+.dashboard[data-theme="dark"] .memberRequirementTitle {
+  border-color: #2b3a4e;
+}
+
+.dashboard[data-theme="dark"] .moduleSectionTitle,
+.dashboard[data-theme="dark"] .moduleField > span,
+.dashboard[data-theme="dark"] .userField > span,
+.dashboard[data-theme="dark"] .moduleAttendanceSummary > span:first-child,
+.dashboard[data-theme="dark"] .networkDetailsGrid h3,
+.dashboard[data-theme="dark"] .historyList strong,
+.dashboard[data-theme="dark"] .networkPeopleList strong,
+.dashboard[data-theme="dark"] .requirementMemberResults li {
+  color: #c5d2e2;
+}
+
+.dashboard[data-theme="dark"] .moduleField input,
+.dashboard[data-theme="dark"] .moduleField select,
+.dashboard[data-theme="dark"] .moduleField textarea,
+.dashboard[data-theme="dark"] .filterField select,
+.dashboard[data-theme="dark"] .moduleSearch input,
+.dashboard[data-theme="dark"] .userField input,
+.dashboard[data-theme="dark"] .userField select,
+.dashboard[data-theme="dark"] .userSearch input,
+.dashboard[data-theme="dark"] .moduleAttendanceSelect,
+.dashboard[data-theme="dark"] .settingsUserActions select {
+  border-color: #394b62;
+  color: #e1e9f2;
+  background-color: #111f31;
+}
+
+.dashboard[data-theme="dark"] .moduleField input::placeholder,
+.dashboard[data-theme="dark"] .moduleField textarea::placeholder,
+.dashboard[data-theme="dark"] .moduleSearch input::placeholder,
+.dashboard[data-theme="dark"] .userField input::placeholder,
+.dashboard[data-theme="dark"] .userSearch input::placeholder {
+  color: #8293a9;
+}
+
+.dashboard[data-theme="dark"] .moduleField input:focus,
+.dashboard[data-theme="dark"] .moduleField select:focus,
+.dashboard[data-theme="dark"] .moduleField textarea:focus,
+.dashboard[data-theme="dark"] .filterField select:focus,
+.dashboard[data-theme="dark"] .moduleSearch input:focus,
+.dashboard[data-theme="dark"] .userField input:focus,
+.dashboard[data-theme="dark"] .userField select:focus,
+.dashboard[data-theme="dark"] .userSearch input:focus,
+.dashboard[data-theme="dark"] .moduleAttendanceSelect:focus {
+  border-color: #7098c2;
+  box-shadow: 0 0 0 3px rgba(91, 143, 196, 0.18);
+}
+
+.dashboard[data-theme="dark"] .moduleField input:disabled,
+.dashboard[data-theme="dark"] .moduleField select:disabled,
+.dashboard[data-theme="dark"] .moduleField textarea:disabled {
+  color: #9aa8bb;
+  background: #1b2b40;
+}
+
+.dashboard[data-theme="dark"] .moduleTable th,
+.dashboard[data-theme="dark"] .userTable th {
+  border-bottom-color: #304158;
+  color: #a7b6c8;
+  background: #1b2b40;
+}
+
+.dashboard[data-theme="dark"] .moduleTable td,
+.dashboard[data-theme="dark"] .userTable td {
+  border-bottom-color: #29394e;
+  color: #b6c4d5;
+}
+
+.dashboard[data-theme="dark"] .moduleTable tbody tr:hover,
+.dashboard[data-theme="dark"] .userTable tbody tr:hover {
+  background: #1c2c41;
+}
+
+.dashboard[data-theme="dark"] .moduleName,
+.dashboard[data-theme="dark"] .userName,
+.dashboard[data-theme="dark"] .networkDetailStats strong,
+.dashboard[data-theme="dark"] .requirementCurrentAnswer strong {
+  color: #e1e9f2;
+}
+
+.dashboard[data-theme="dark"] .moduleSubtext,
+.dashboard[data-theme="dark"] .historyList span,
+.dashboard[data-theme="dark"] .historyList small,
+.dashboard[data-theme="dark"] .networkPeopleList span,
+.dashboard[data-theme="dark"] .networkDetailStats span,
+.dashboard[data-theme="dark"] .requirementCurrentAnswer span,
+.dashboard[data-theme="dark"] .requirementCurrentAnswer small {
+  color: #91a2b7;
+}
+
+.dashboard[data-theme="dark"] .moduleBadgeActive,
+.dashboard[data-theme="dark"] .userStatusActive {
+  color: #8ed3aa;
+  background: #183b30;
+}
+
+.dashboard[data-theme="dark"] .moduleBadgeInactive,
+.dashboard[data-theme="dark"] .userStatusInactive {
+  color: #e7c18a;
+  background: #40321f;
+}
+
+.dashboard[data-theme="dark"] .userStatusPending {
+  color: #c0dcf8;
+  background: #243a54;
+}
+
+.dashboard[data-theme="dark"] .userApproveButton {
+  color: #8ed3aa;
+}
+
+.dashboard[data-theme="dark"] .userApproveButton:hover:not(:disabled) {
+  background: #183b30;
+}
+
+.dashboard[data-theme="dark"] .userRejectButton {
+  color: #ffb8bf;
+}
+
+.dashboard[data-theme="dark"] .userRejectButton:hover:not(:disabled) {
+  background: #3a222b;
+}
+
+.dashboard[data-theme="dark"] .moduleTextButton,
+.dashboard[data-theme="dark"] .requirementState {
+  color: #91b9e2;
+}
+
+.dashboard[data-theme="dark"] .moduleTextButton:hover {
+  color: #c5ddf6;
+}
+
+.dashboard[data-theme="dark"] .moduleSecondaryButton,
+.dashboard[data-theme="dark"] .actionButton {
+  border-color: #394b62;
+  color: #c2d0e0;
+  background: #1a2a3e;
+}
+
+.dashboard[data-theme="dark"] .moduleSecondaryButton:hover:not(:disabled),
+.dashboard[data-theme="dark"] .actionButton:hover:not(:disabled) {
+  border-color: #526f91;
+  color: #ffffff;
+  background: #243a54;
+}
+
+.dashboard[data-theme="dark"] .settingsTabs,
+.dashboard[data-theme="dark"] .memberProfileTabs {
+  border-color: #2b3a4e;
+  background: #172538;
+}
+
+.dashboard[data-theme="dark"] .settingsTab {
+  color: #aab8ca;
+}
+
+.dashboard[data-theme="dark"] .settingsTabActive {
+  border-color: #3a526f;
+  color: #c0dcf8;
+  background: #243a54;
+}
+
+.dashboard[data-theme="dark"] .reportFilters {
+  border-color: #2b3a4e;
+  background: #172538;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.dashboard[data-theme="dark"] .reportBarValue,
+.dashboard[data-theme="dark"] .reportBar small {
+  color: #a0afc2;
+}
+
+.dashboard[data-theme="dark"] .reportBarTrack {
+  background: #293b52;
+}
+
+.dashboard[data-theme="dark"] .reportBarTrack span {
+  background: linear-gradient(180deg, #8cb8e2, #4776a8);
+}
+
+.dashboard[data-theme="dark"] .moduleError,
+.dashboard[data-theme="dark"] .usersAlertError {
+  border-color: #70404b;
+  color: #ffc0c7;
+  background: #3a222b;
+}
+
+.dashboard[data-theme="dark"] .moduleSuccess,
+.dashboard[data-theme="dark"] .usersAlertSuccess {
+  border-color: #315f4c;
+  color: #a5e1ba;
+  background: #1b382d;
+}
+
+.dashboard[data-theme="dark"] .overlay {
+  background: rgba(2, 8, 16, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeToggle {
+    transition: none;
   }
 }

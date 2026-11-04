@@ -418,3 +418,162 @@
     flex-direction: column;
   }
 }
+
+.container {
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: Inter, var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+.brandPanel {
+  background:
+    radial-gradient(ellipse at 18% 82%, rgba(107, 151, 196, 0.19), transparent 34rem),
+    radial-gradient(ellipse at 90% 8%, rgba(255, 255, 255, 0.07), transparent 25rem),
+    linear-gradient(145deg, #14243a 0%, #172f4d 62%, #203e62 100%);
+}
+
+.brandPanel::after {
+  border-color: rgba(255, 255, 255, 0.11);
+}
+
+.logo img {
+  width: min(198px, 55vw);
+  filter: drop-shadow(0 8px 18px rgba(5, 15, 29, 0.13));
+}
+
+.eyebrow {
+  color: #a7c2df;
+  letter-spacing: 1.8px;
+}
+
+.welcome h1 {
+  letter-spacing: -1.5px;
+}
+
+.welcome p {
+  color: #d0dbe8;
+  font-size: 15px;
+}
+
+.brandFooter {
+  color: #b0bfd1;
+}
+
+.formPanel {
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(49, 91, 137, 0.045), transparent 28rem),
+    #ffffff;
+}
+
+.loginCard {
+  max-width: 420px;
+}
+
+.heading h2 {
+  color: #172b4d;
+  letter-spacing: -0.95px;
+}
+
+.heading p {
+  color: #718096;
+}
+
+.field {
+  gap: 9px;
+}
+
+.field label {
+  color: #344861;
+  font-size: 12px;
+}
+
+.field input {
+  height: 50px;
+  border-color: #dfe7ef;
+  border-radius: 10px;
+  background: #fbfcfe;
+  color: #172b4d;
+}
+
+.field input:focus {
+  border-color: #6a8db2;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(49, 91, 137, 0.1);
+}
+
+.showPassword,
+.forgotPassword {
+  color: #315b89;
+}
+
+.submitButton {
+  height: 51px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #315b89, #244a73);
+  box-shadow: 0 7px 16px rgba(36, 74, 115, 0.17);
+}
+
+.submitButton:hover {
+  background: #172b4d;
+  box-shadow: 0 9px 19px rgba(36, 74, 115, 0.2);
+}
+
+.security {
+  color: #8896a8;
+}
+
+@media (max-width: 650px) {
+  .formPanel {
+    min-height: 100dvh;
+    padding: 28px 22px;
+    background:
+      radial-gradient(ellipse at 85% 0%, rgba(49, 91, 137, 0.07), transparent 24rem),
+      #ffffff;
+  }
+
+  .mobileLogo {
+    margin-bottom: 48px;
+    color: #172b4d;
+  }
+
+  .mobileLogo img {
+    width: 126px;
+    border-radius: 9px;
+    background: #14243a;
+    box-shadow: 0 6px 16px rgba(20, 36, 58, 0.12);
+  }
+
+  .heading {
+    margin-bottom: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submitButton {
+    transition: none;
+  }
+}
+
+.authLinks {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 21px;
+  color: #78879b;
+  font-size: 10px;
+  text-align: center;
+}
+
+.authLinks a {
+  color: #315b89;
+  font-weight: 650;
+}
+
+.authLinks a:hover {
+  text-decoration: underline;
+}
+
+.authLinks a:focus-visible {
+  outline: 3px solid #729ac5;
+  outline-offset: 3px;
+}

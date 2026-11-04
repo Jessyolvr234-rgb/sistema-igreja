@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,6 +10,11 @@ import styles from "./dashboard.module.css";
 type Props = {
   email: string;
   children?: ReactNode;
+};
+
+type HeaderProfile = {
+  fullName: string;
+  avatarUrl: string | null;
 };
 
 type IconName =
@@ -124,10 +129,70 @@ function DashboardIcon({
 
 export default function DashboardShell({ email, children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerProfile, setHeaderProfile] = useState<HeaderProfile | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const pathname = usePathname();
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const savedTheme = window.localStorage.getItem("gestao-emaus-theme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        setTheme(savedTheme);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadProfile = () => {
+      fetch("/api/dashboard/profile", { signal: controller.signal })
+        .then(async (response) => {
+          const result = (await response.json()) as {
+            profile?: HeaderProfile;
+            error?: string;
+          };
+          if (!response.ok || !result.profile) {
+            throw new Error(result.error ?? "Não foi possível carregar o perfil.");
+          }
+          setHeaderProfile(result.profile);
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          console.error("Erro ao carregar perfil no cabeçalho:", error);
+        });
+    };
+
+    const handleProfileUpdate = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return;
+      const profile = event.detail as HeaderProfile;
+      if (
+        typeof profile?.fullName === "string" &&
+        (typeof profile.avatarUrl === "string" || profile.avatarUrl === null)
+      ) {
+        setHeaderProfile(profile);
+      }
+    };
+
+    loadProfile();
+    window.addEventListener("dashboard-profile-updated", handleProfileUpdate);
+    return () => {
+      controller.abort();
+      window.removeEventListener(
+        "dashboard-profile-updated",
+        handleProfileUpdate
+      );
+    };
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    window.localStorage.setItem("gestao-emaus-theme", nextTheme);
+  }
+
   return (
-    <div className={styles.dashboard}>
+    <div className={styles.dashboard} data-theme={theme}>
       {menuOpen && (
         <button
           type="button"
@@ -185,8 +250,15 @@ export default function DashboardShell({ email, children }: Props) {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <span className={styles.statusDot} />
-          Sistema operacional
+          <div className={styles.sidebarStatus}>
+            <span className={styles.statusDot} />
+            Sistema operacional
+          </div>
+          <form action="/auth/signout" method="post">
+            <button type="submit" className={styles.sidebarSignOut}>
+              Sair
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -209,6 +281,8 @@ export default function DashboardShell({ email, children }: Props) {
             <div className={styles.headerTitle}>
               {pathname === "/dashboard/usuarios"
                 ? "Usuários"
+                : pathname === "/dashboard/perfil"
+                  ? "Meu perfil"
                 : pathname === "/dashboard/membros"
                   ? "Membros"
                   : pathname === "/dashboard/redes"
@@ -231,20 +305,86 @@ export default function DashboardShell({ email, children }: Props) {
           </div>
 
           <div className={styles.userArea}>
-            <div className={styles.avatar}>
-              {email.charAt(0).toUpperCase() || "U"}
-            </div>
+            <button
+              aria-label={
+                theme === "light"
+                  ? "Ativar modo escuro"
+                  : "Ativar modo claro"
+              }
+              aria-pressed={theme === "dark"}
+              className={styles.themeToggle}
+              onClick={toggleTheme}
+              title={theme === "light" ? "Modo escuro" : "Modo claro"}
+              type="button"
+            >
+              {theme === "light" ? (
+                <svg
+                  aria-hidden="true"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  width="19"
+                  height="19"
+                >
+                  <path
+                    d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  aria-hidden="true"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  width="19"
+                  height="19"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="4"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <path
+                    d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              )}
+            </button>
+            <Link
+              aria-label="Abrir meu perfil"
+              className={styles.profileLink}
+              href="/dashboard/perfil"
+              title="Meu perfil"
+            >
+              <span className={styles.avatar}>
+                {headerProfile?.avatarUrl ? (
+                  <Image
+                    alt=""
+                    className={styles.avatarImage}
+                    fill
+                    sizes="40px"
+                    src={headerProfile.avatarUrl}
+                    unoptimized
+                  />
+                ) : (
+                  (headerProfile?.fullName || email).charAt(0).toUpperCase() ||
+                  "U"
+                )}
+              </span>
 
-            <div className={styles.userInfo}>
-              <strong>Usuário</strong>
-              <span>{email || "Usuário autenticado"}</span>
-            </div>
+              <span className={styles.userInfo}>
+                <strong>{headerProfile?.fullName || "Usuário"}</strong>
+                <span>{email || "Usuário autenticado"}</span>
+              </span>
+            </Link>
 
-            <form action="/auth/signout" method="post">
-              <button type="submit" className={styles.signOut}>
-                Sair
-              </button>
-            </form>
           </div>
         </header>
 

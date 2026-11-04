@@ -1,0 +1,328 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(460px, 1.1fr);
+  background: #f7f9fc;
+  font-family: Inter, var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+.brandPanel {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: clamp(32px, 5vw, 68px);
+  color: #ffffff;
+  background:
+    radial-gradient(ellipse at 18% 83%, rgba(107, 151, 196, 0.2), transparent 34rem),
+    linear-gradient(145deg, #14243a 0%, #172f4d 62%, #203e62 100%);
+}
+
+.brandPanel::after {
+  position: absolute;
+  right: -210px;
+  bottom: -240px;
+  width: 520px;
+  height: 520px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 55px rgba(255, 255, 255, 0.025),
+    0 0 0 110px rgba(255, 255, 255, 0.02);
+  content: "";
+  pointer-events: none;
+}
+
+.brand {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.brand img {
+  display: block;
+  width: min(178px, 100%);
+  height: auto;
+  object-fit: contain;
+}
+
+.brandMessage {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  margin-block: 70px;
+}
+
+.brandMessage > span,
+.heading > span {
+  color: #91b5da;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+.brandMessage h1 {
+  margin-top: 20px;
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -1.5px;
+  line-height: 1.13;
+}
+
+.brandMessage p {
+  max-width: 390px;
+  margin-top: 18px;
+  color: #c3d1e0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.brandFooter {
+  position: relative;
+  z-index: 1;
+  color: #aabbd0;
+  font-size: 10px;
+}
+
+.formPanel {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  padding: 38px clamp(24px, 6vw, 88px);
+}
+
+.formCard {
+  width: min(100%, 470px);
+}
+
+.backLink,
+.loginLink a {
+  color: #315b89;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.backLink:hover,
+.loginLink a:hover {
+  text-decoration: underline;
+}
+
+.heading {
+  margin-block: 27px 24px;
+}
+
+.heading h2 {
+  margin-top: 11px;
+  color: #172b4d;
+  font-size: 29px;
+  letter-spacing: -0.8px;
+}
+
+.heading p {
+  margin-top: 8px;
+  color: #718096;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.form > label {
+  display: grid;
+  gap: 7px;
+}
+
+.form > label > span:first-child {
+  color: #344861;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.form input {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid #dfe7ef;
+  border-radius: 9px;
+  outline: none;
+  color: #172b4d;
+  background: #ffffff;
+  font-size: 11px;
+}
+
+.form input:focus {
+  border-color: #6a8db2;
+  box-shadow: 0 0 0 3px rgba(49, 91, 137, 0.1);
+}
+
+.form input::placeholder {
+  color: #a0aec0;
+}
+
+.passwordInput {
+  position: relative;
+  display: block;
+}
+
+.passwordInput input {
+  padding-right: 78px;
+}
+
+.passwordInput button {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  padding: 7px;
+  border: 0;
+  color: #315b89;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 600;
+  transform: translateY(-50%);
+}
+
+.approvalNote {
+  padding: 12px 13px;
+  border: 1px solid #dce8f4;
+  border-radius: 9px;
+  color: #526981;
+  background: #f1f6fb;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.submitButton {
+  min-height: 46px;
+  border: 0;
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #315b89, #244a73);
+  box-shadow: 0 6px 15px rgba(36, 74, 115, 0.16);
+  font-size: 11px;
+  font-weight: 650;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #172b4d;
+  box-shadow: 0 8px 18px rgba(36, 74, 115, 0.2);
+}
+
+.submitButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.error,
+.success {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 17px;
+  padding: 13px 15px;
+  border: 1px solid;
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.error {
+  border-color: #f1caca;
+  color: #9c2929;
+  background: #fff3f3;
+}
+
+.success {
+  border-color: #c9e8d4;
+  color: #216b44;
+  background: #f0faf3;
+}
+
+.success a {
+  width: fit-content;
+  margin-top: 3px;
+  color: #176b43;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.loginLink {
+  margin-top: 21px;
+  color: #718096;
+  font-size: 10px;
+  text-align: center;
+}
+
+.loginLink a {
+  margin-left: 4px;
+}
+
+.backLink:focus-visible,
+.form input:focus-visible,
+.passwordInput button:focus-visible,
+.submitButton:focus-visible,
+.success a:focus-visible {
+  outline: 3px solid #729ac5;
+  outline-offset: 3px;
+}
+
+@media (max-width: 850px) {
+  .page {
+    grid-template-columns: 0.78fr 1.22fr;
+  }
+
+  .brandPanel {
+    padding: 35px;
+  }
+}
+
+@media (max-width: 650px) {
+  .page {
+    display: block;
+    min-height: 100svh;
+    background: #ffffff;
+  }
+
+  .brandPanel {
+    display: none;
+  }
+
+  .formPanel {
+    min-height: 100svh;
+    padding: 30px 22px;
+    background:
+      radial-gradient(ellipse at 88% 0%, rgba(49, 91, 137, 0.055), transparent 25rem),
+      #ffffff;
+  }
+
+  .formCard {
+    max-width: 430px;
+    margin: auto;
+  }
+
+  .heading {
+    margin-block: 23px 20px;
+  }
+
+  .heading h2 {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submitButton {
+    transition: none;
+  }
+}
