@@ -1,0 +1,422 @@
+
+/* =========================================
+   SISTEMA DE GESTÃO DA IGREJA
+   LOGIN RESPONSIVO - MOBILE FIRST
+========================================= */
+
+.container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+}
+
+/* IDENTIDADE VISUAL */
+
+.brandPanel {
+  background:
+    radial-gradient(
+      circle at 15% 85%,
+      rgba(74, 125, 183, 0.22),
+      transparent 35%
+    ),
+    linear-gradient(145deg, #172b4d, #10213b);
+
+  color: #ffffff;
+  padding: 55px 65px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.brandPanel::after {
+  content: "";
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  right: -180px;
+  bottom: -180px;
+
+  box-shadow:
+    0 0 0 55px rgba(255, 255, 255, 0.025),
+    0 0 0 110px rgba(255, 255, 255, 0.02);
+}
+
+.brandContent {
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.logoIcon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: #172b4d;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.welcome {
+  margin-top: 150px;
+}
+
+.eyebrow {
+  color: #729ac5;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.welcome h1 {
+  margin-top: 22px;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1.2;
+  letter-spacing: -1.8px;
+}
+
+.welcome p {
+  margin-top: 24px;
+  max-width: 430px;
+  color: #c4d0df;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.brandFooter {
+  margin-top: 125px;
+  color: #9aadc4;
+  font-size: 12px;
+}
+
+/* ÁREA DE LOGIN */
+
+.formPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 35px;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 410px;
+}
+
+.mobileLogo {
+  display: none;
+}
+
+.heading {
+  margin-bottom: 38px;
+}
+
+.heading h2 {
+  margin-top: 15px;
+  color: #172b4d;
+  font-size: 30px;
+  letter-spacing: -0.8px;
+}
+
+.heading p {
+  margin-top: 10px;
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* FORMULÁRIO */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field label {
+  color: #253247;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  height: 52px;
+  padding: 0 15px;
+  border: 1px solid #dce3ec;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #172b4d;
+  outline: none;
+  transition: 0.2s;
+}
+
+.field input::placeholder {
+  color: #a0aec0;
+}
+
+.field input:focus {
+  border-color: #315b89;
+  box-shadow: 0 0 0 3px rgba(49, 91, 137, 0.1);
+}
+
+/* SENHA */
+
+.passwordWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.passwordWrapper input {
+  padding-right: 90px;
+}
+
+.showPassword {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+
+  border: none;
+  background: transparent;
+  color: #315b89;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  padding: 8px 5px;
+  touch-action: manipulation;
+}
+
+.showPassword:hover {
+  color: #172b4d;
+}
+
+/* OPÇÕES */
+
+.formOptions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -5px;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.remember input {
+  accent-color: #244a73;
+  cursor: pointer;
+}
+
+.forgotPassword {
+  border: none;
+  background: transparent;
+  color: #315b89;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forgotPassword:hover {
+  text-decoration: underline;
+}
+
+/* BOTÃO ENTRAR */
+
+.submitButton {
+  height: 53px;
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  background: #172b4d;
+  color: #ffffff;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.submitButton:hover {
+  background: #244a73;
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  transform: scale(0.99);
+}
+
+.submitButton:focus-visible,
+.showPassword:focus-visible,
+.forgotPassword:focus-visible {
+  outline: 3px solid #729ac5;
+  outline-offset: 3px;
+}
+
+/* MENSAGENS */
+
+.message {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.messageError {
+  color: #a52828;
+  background: #fff0f0;
+  border: 1px solid #f3caca;
+}
+
+.messageSuccess {
+  color: #176b43;
+  background: #edf9f1;
+  border: 1px solid #c6ead3;
+}
+
+.messageInfo {
+  color: #244a73;
+  background: #eef4fb;
+  border: 1px solid #d5e3f2;
+}
+
+/* SEGURANÇA */
+
+.security {
+  margin-top: 45px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.security span {
+  color: #3b82a0;
+  margin-right: 6px;
+}
+
+/* TABLET */
+
+@media (max-width: 850px) {
+  .container {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+
+  .brandPanel {
+    padding: 35px;
+  }
+
+  .welcome {
+    margin-top: 100px;
+  }
+
+  .brandFooter {
+    margin-top: 90px;
+  }
+}
+
+/* CELULAR - PRIORIDADE */
+
+@media (max-width: 650px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .brandPanel {
+    display: none;
+  }
+
+  .formPanel {
+    min-height: 100vh;
+    padding: 35px 25px;
+  }
+
+  .loginCard {
+    width: 100%;
+    max-width: 430px;
+    margin: auto;
+  }
+
+  .mobileLogo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 65px;
+
+    color: #172b4d;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .mobileLogo .logoIcon {
+    background: #172b4d;
+    color: #ffffff;
+  }
+
+  .heading h2 {
+    font-size: 27px;
+  }
+
+  .security {
+    margin-top: 35px;
+  }
+}
+
+/* CELULARES PEQUENOS */
+
+@media (max-width: 380px) {
+  .formPanel {
+    padding: 25px 18px;
+  }
+
+  .mobileLogo {
+    margin-bottom: 45px;
+  }
+
+  .formOptions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
