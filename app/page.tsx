@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./login.module.css";
@@ -145,8 +146,13 @@ export default function LoginPage() {
       <section className={styles.brandPanel}>
         <div className={styles.brandContent}>
           <div className={styles.logo}>
-            <span className={styles.logoIcon}>G</span>
-            <span>Gestão Igreja</span>
+            <Image
+              src="/rede-emaus.png"
+              alt="Rede Emaús"
+              width={188}
+              height={84}
+              priority
+            />
           </div>
 
           <div className={styles.welcome}>
@@ -175,7 +181,13 @@ export default function LoginPage() {
       <section className={styles.formPanel}>
         <div className={styles.loginCard}>
           <div className={styles.mobileLogo}>
-            <span className={styles.logoIcon}>G</span>
+            <Image
+              src="/rede-emaus.png"
+              alt="Rede Emaús"
+              width={152}
+              height={68}
+              priority
+            />
             <span>Gestão Igreja</span>
           </div>
 

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./dashboard.module.css";
@@ -142,11 +143,18 @@ export default function DashboardShell({ email, children }: Props) {
         }`}
       >
         <div className={styles.logo}>
-          <span className={styles.logoIcon}>G</span>
+          <Image
+            className={styles.logoImage}
+            src="/rede-emaus.png"
+            alt="Rede Emaús"
+            width={132}
+            height={59}
+            priority
+          />
           <div>
             <strong className={styles.logoText}>Gestão Igreja</strong>
             <small className={styles.logoSubtitle}>
-              Organização e cuidado
+              Administração
             </small>
           </div>
         </div>

@@ -56,22 +56,12 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 13px;
-  font-size: 19px;
-  font-weight: 700;
 }
 
-.logoIcon {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: #ffffff;
-  color: #172b4d;
-  font-size: 22px;
-  font-weight: 800;
+.logo img {
+  display: block;
+  width: min(188px, 55vw);
+  height: auto;
 }
 
 .welcome {
@@ -390,9 +380,13 @@
     font-weight: 700;
   }
 
-  .mobileLogo .logoIcon {
+  .mobileLogo img {
+    display: block;
+    width: 132px;
+    height: auto;
+    padding: 8px;
+    border-radius: 8px;
     background: #172b4d;
-    color: #ffffff;
   }
 
   .heading h2 {
@@ -413,6 +407,10 @@
 
   .mobileLogo {
     margin-bottom: 45px;
+  }
+
+  .mobileLogo img {
+    width: 118px;
   }
 
   .formOptions {

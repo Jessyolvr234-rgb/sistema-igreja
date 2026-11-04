@@ -32,24 +32,16 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin: 0 4px 42px;
   padding: 0 8px;
 }
 
-.logoIcon {
-  display: grid;
-  width: 42px;
-  height: 42px;
+.logoImage {
+  display: block;
+  width: 112px;
+  height: auto;
   flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 13px;
-  color: var(--dashboard-navy);
-  background: #ffffff;
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.16);
-  font-size: 22px;
-  font-weight: 800;
 }
 
 .logoText {
