@@ -1,4 +1,4 @@
-const CACHE_NAME = "emaus-static-v1";
+const CACHE_NAME = "emaus-static-v2";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_URL,
