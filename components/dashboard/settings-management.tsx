@@ -699,45 +699,47 @@ export default function SettingsManagement() {
                     <tbody>
                       <tr>
                         <td data-label="Recurso">Redes</td>
-                        <td data-label="Administrador">Todas: gerenciar</td>
+                        <td data-label="Administrador">Todas: consultar e gerenciar</td>
                         <td data-label="Supervisor">
-                          Atribuídas: gerenciar; novas redes vinculadas
+                          Todas: consultar; criar; atribuídas: gerenciar
                         </td>
-                        <td data-label="Líder">Rede da célula: consultar</td>
+                        <td data-label="Líder">Todas: consultar</td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Células e membros</td>
-                        <td data-label="Administrador">Todas: gerenciar</td>
+                        <td data-label="Administrador">Todas: consultar e gerenciar</td>
                         <td data-label="Supervisor">
-                          Redes atribuídas: gerenciar
+                          Todas: consultar; atribuídas: gerenciar
                         </td>
                         <td data-label="Líder">
-                          Própria célula: membros gerenciar
+                          Todas: consultar; própria célula: membros gerenciar
                         </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Frequência</td>
-                        <td data-label="Administrador">Todas</td>
-                        <td data-label="Supervisor">Redes atribuídas</td>
+                        <td data-label="Administrador">Todas: consultar e gerenciar</td>
+                        <td data-label="Supervisor">
+                          Todas: consultar; atribuídas: registrar e corrigir
+                        </td>
                         <td data-label="Líder">
-                          Própria célula: consultar e registrar
+                          Todas: consultar; própria célula: registrar
                         </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Requisitos</td>
-                        <td data-label="Administrador">Gerenciar globalmente</td>
+                        <td data-label="Administrador">Consultar e gerenciar globalmente</td>
                         <td data-label="Supervisor">
-                          Catálogo global e membros das redes
+                          Consultar tudo; catálogo global; respostas em redes atribuídas
                         </td>
                         <td data-label="Líder">
-                          Consultar/atualizar membros da célula
+                          Consultar tudo; atualizar respostas da própria célula
                         </td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Relatórios</td>
                         <td data-label="Administrador">Todos</td>
-                        <td data-label="Supervisor">Redes atribuídas</td>
-                        <td data-label="Líder">Sem acesso geral</td>
+                        <td data-label="Supervisor">Todos</td>
+                        <td data-label="Líder">Todos</td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Usuários e configurações</td>

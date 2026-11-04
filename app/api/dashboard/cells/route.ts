@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  getAllCellIds,
   getAccessibleCellIds,
   getDashboardAccess,
 } from "@/lib/supabase/dashboard-access";
@@ -103,7 +104,7 @@ export async function GET(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  const scope = await getAccessibleCellIds(access);
+  const scope = await getAllCellIds(access);
   if ("error" in scope) {
     return NextResponse.json({ error: scope.error }, { status: 500 });
   }
@@ -120,12 +121,10 @@ export async function GET(request: Request) {
     .select("id, name, network_id, leader_id, is_active, created_at")
     .order("name", { ascending: true });
 
-  if (access.role !== "admin") {
-    baseQuery = baseQuery.in(
+  if (!scope.cellIds.length) {
+    baseQuery = baseQuery.eq(
       "id",
-      scope.cellIds.length
-        ? scope.cellIds
-        : ["00000000-0000-0000-0000-000000000000"]
+      "00000000-0000-0000-0000-000000000000"
     );
   }
 
@@ -138,38 +137,20 @@ export async function GET(request: Request) {
     );
   }
 
-  const visibleNetworkIds = [...new Set(allCells.map((cell) => cell.network_id))];
   const leaderIds = [
     ...new Set(allCells.map((cell) => cell.leader_id).filter(Boolean)),
   ];
-  let networkQuery = access.adminClient
+  const networkQuery = access.adminClient
     .from("networks")
     .select("id, name")
     .order("name", { ascending: true });
-  if (access.role === "supervisor") {
-    networkQuery =
-      access.networkIds.length > 0
-        ? networkQuery.in("id", access.networkIds)
-        : networkQuery.eq("id", "00000000-0000-0000-0000-000000000000");
-  } else if (access.role === "leader") {
-    networkQuery =
-      visibleNetworkIds.length > 0
-        ? networkQuery.in("id", visibleNetworkIds)
-        : networkQuery.eq("id", "00000000-0000-0000-0000-000000000000");
-  }
 
-  let leaderQuery = access.adminClient
+  const leaderQuery = access.adminClient
     .from("profiles")
     .select("id, full_name")
     .eq("role", "leader")
     .eq("is_active", true)
     .order("full_name", { ascending: true });
-  if (access.role === "leader") {
-    leaderQuery =
-      leaderIds.length > 0
-        ? leaderQuery.in("id", leaderIds)
-        : leaderQuery.eq("id", "00000000-0000-0000-0000-000000000000");
-  }
 
   const [networkResult, leaderResult, memberResult, currentLeadersResult] =
     await Promise.all([
@@ -249,6 +230,10 @@ export async function GET(request: Request) {
     name: cell.name,
     networkId: cell.network_id,
     networkName: networkById.get(cell.network_id) ?? "Rede",
+    canManage:
+      access.role === "admin" ||
+      (access.role === "supervisor" &&
+        access.networkIds.includes(cell.network_id)),
     leaderId: cell.leader_id,
     leaderName: cell.leader_id
       ? leaderById.get(cell.leader_id) ?? "Líder não encontrado"
@@ -283,7 +268,12 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     cells: filteredCells,
-    networks: networkResult.data ?? [],
+    networks:
+      access.role === "supervisor"
+        ? (networkResult.data ?? []).filter((network) =>
+            access.networkIds.includes(network.id)
+          )
+        : networkResult.data ?? [],
     leaders,
     stats: {
       total: mappedCells.length,

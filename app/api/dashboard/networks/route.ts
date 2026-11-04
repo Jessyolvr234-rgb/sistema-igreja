@@ -79,16 +79,11 @@ async function loadNetworkData(access: DashboardAccess, networkIds: string[]) {
       .in("network_id", networkIds),
   ]);
 
-  let cellQuery = adminClient
+  const cellQuery = adminClient
     .from("cells")
     .select("id, name, network_id, leader_id, is_active, created_at")
     .in("network_id", networkIds)
     .order("name", { ascending: true });
-  if (access.role === "leader") {
-    cellQuery = access.cellIds.length
-      ? cellQuery.in("id", access.cellIds)
-      : cellQuery.eq("id", "00000000-0000-0000-0000-000000000000");
-  }
 
   const scopedCellResult = await cellQuery;
 
@@ -170,7 +165,8 @@ function toNetworkView(
     is_active: boolean;
     created_at: string;
   },
-  data: Awaited<ReturnType<typeof loadNetworkData>>
+  data: Awaited<ReturnType<typeof loadNetworkData>>,
+  access: DashboardAccess
 ) {
   const supervisors = data.supervisors.flatMap((entry) =>
     entry.networkId === network.id && entry.profile
@@ -207,6 +203,10 @@ function toNetworkView(
 
   return {
     id: network.id,
+    canManage:
+      access.role === "admin" ||
+      (access.role === "supervisor" &&
+        access.networkIds.includes(network.id)),
     name: network.name,
     description: network.description,
     isActive: network.is_active,
@@ -256,58 +256,19 @@ export async function GET(request: Request) {
 
   const { access } = result;
   const requestedId = new URL(request.url).searchParams.get("id");
-  let networkIds = access.networkIds;
-
-  if (access.role === "admin") {
-    let query = access.adminClient.from("networks").select("id");
-    if (requestedId) {
-      query = query.eq("id", requestedId);
-    }
-    const { data, error } = await query;
-    if (error) {
-      console.error("Erro ao consultar redes:", error);
-      return NextResponse.json(
-        { error: "Não foi possível carregar as redes." },
-        { status: 500 }
-      );
-    }
-    networkIds = data.map((network) => network.id);
-  } else if (access.role === "leader") {
-    if (access.cellIds.length) {
-      const { data: cells, error } = await access.adminClient
-        .from("cells")
-        .select("network_id")
-        .in("id", access.cellIds);
-      if (error) {
-        console.error("Erro ao consultar redes das células do líder:", error);
-        return NextResponse.json(
-          { error: "Não foi possível carregar as redes autorizadas." },
-          { status: 500 }
-        );
-      }
-      networkIds = [...new Set(cells.map((cell) => cell.network_id))];
-    } else {
-      networkIds = [];
-    }
-
-    if (requestedId && !networkIds.includes(requestedId)) {
-      return NextResponse.json(
-        { error: "Você não tem permissão para acessar esta rede." },
-        { status: 403 }
-      );
-    }
-    if (requestedId) {
-      networkIds = [requestedId];
-    }
-  } else if (requestedId) {
-    if (!access.networkIds.includes(requestedId)) {
-      return NextResponse.json(
-        { error: "Você não tem permissão para acessar esta rede." },
-        { status: 403 }
-      );
-    }
-    networkIds = [requestedId];
+  let networksQuery = access.adminClient.from("networks").select("id");
+  if (requestedId) {
+    networksQuery = networksQuery.eq("id", requestedId);
   }
+  const { data: networkRows, error: networksError } = await networksQuery;
+  if (networksError) {
+    console.error("Erro ao consultar redes:", networksError);
+    return NextResponse.json(
+      { error: "Não foi possível carregar as redes." },
+      { status: 500 }
+    );
+  }
+  const networkIds = networkRows.map((network) => network.id);
 
   const data = await loadNetworkData(access, networkIds);
   if (data.error) {
@@ -318,7 +279,9 @@ export async function GET(request: Request) {
     );
   }
 
-  const networks = data.networks.map((network) => toNetworkView(network, data));
+  const networks = data.networks.map((network) =>
+    toNetworkView(network, data, access)
+  );
   if (requestedId && networks.length === 0) {
     return NextResponse.json(
       { error: "Rede não encontrada." },
@@ -477,7 +440,7 @@ export async function POST(request: Request) {
     {
       network:
         details.error === null
-          ? toNetworkView(network, details)
+          ?           toNetworkView(network, details, access)
           : toNetworkView(network, {
               networks: [network],
               cells: [],
@@ -485,7 +448,7 @@ export async function POST(request: Request) {
               leaders: [],
               members: [],
               error: null,
-            }),
+            }, access),
       warning,
     },
     { status: 201 }
@@ -684,7 +647,7 @@ export async function PATCH(request: Request) {
   return NextResponse.json({
     network:
       details.error === null
-        ? toNetworkView(updated, details)
+        ? toNetworkView(updated, details, access)
         : toNetworkView(updated, {
             networks: [updated],
             cells: [],
@@ -692,7 +655,7 @@ export async function PATCH(request: Request) {
             leaders: [],
             members: [],
             error: null,
-          }),
+          }, access),
     warning: [
       assignmentWarning,
       !auditRecorded && "A rede foi atualizada, mas a auditoria falhou.",

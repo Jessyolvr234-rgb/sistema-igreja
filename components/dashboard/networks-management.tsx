@@ -27,6 +27,7 @@ type Cell = {
 
 type Network = {
   id: string;
+  canManage: boolean;
   name: string;
   description: string | null;
   isActive: boolean;
@@ -98,6 +99,8 @@ function isNetwork(value: unknown): value is Network {
   return (
     "id" in value &&
     typeof value.id === "string" &&
+    "canManage" in value &&
+    typeof value.canManage === "boolean" &&
     "name" in value &&
     typeof value.name === "string" &&
     "description" in value &&
@@ -501,7 +504,7 @@ export default function NetworksManagement() {
               <h2 id="network-details-title">{selectedNetwork.name}</h2>
             </div>
             <div className={styles.moduleRowActions}>
-              {data?.canManage && (
+              {selectedNetwork.canManage && (
                 <button
                   type="button"
                   className={styles.moduleSecondaryButton}
@@ -667,7 +670,7 @@ export default function NetworksManagement() {
                         >
                           Detalhes
                         </button>
-                        {data?.canManage && (
+                        {network.canManage && (
                           <button
                             type="button"
                             className={styles.moduleTextButton}

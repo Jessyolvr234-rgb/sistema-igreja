@@ -162,6 +162,22 @@ export async function getAccessibleCellIds(
   return { cellIds: data.map((cell) => cell.id) };
 }
 
+export async function getAllCellIds(
+  access: DashboardAccess
+): Promise<{ cellIds: string[] } | { error: string }> {
+  const { data, error } = await access.adminClient
+    .from("cells")
+    .select("id")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao consultar células para visualização compartilhada:", error);
+    return { error: "Não foi possível carregar as células." };
+  }
+
+  return { cellIds: data.map((cell) => cell.id) };
+}
+
 export async function canAccessCell(
   access: DashboardAccess,
   cellId: string | null

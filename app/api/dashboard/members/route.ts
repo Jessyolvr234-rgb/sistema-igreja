@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   canAccessCell,
-  getAccessibleCellIds,
+  getAllCellIds,
   getDashboardAccess,
 } from "@/lib/supabase/dashboard-access";
 import { writeAuditLog } from "@/lib/supabase/audit";
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   }
 
   const { access } = result;
-  const cellScope = await getAccessibleCellIds(access);
+  const cellScope = await getAllCellIds(access);
   if ("error" in cellScope) {
     return NextResponse.json({ error: cellScope.error }, { status: 500 });
   }
@@ -51,26 +51,18 @@ export async function GET(request: Request) {
   const pageSize = 10;
 
   const allowedCells = cellScope.cellIds;
-  if (access.role !== "admin" && allowedCells.length === 0) {
-    return NextResponse.json({
-      members: [],
-      networks: [],
-      cells: [],
-      stats: { total: 0, active: 0, inactive: 0, newMembers: 0 },
-      page,
-      pageSize,
-      totalPages: 0,
-      totalResults: 0,
-    });
-  }
-
   let catalogCellQuery = access.adminClient
     .from("cells")
     .select("id, name, network_id, leader_id, is_active")
     .order("name", { ascending: true });
 
-  if (access.role !== "admin") {
+  if (allowedCells.length > 0) {
     catalogCellQuery = catalogCellQuery.in("id", allowedCells);
+  } else {
+    catalogCellQuery = catalogCellQuery.eq(
+      "id",
+      "00000000-0000-0000-0000-000000000000"
+    );
   }
 
   const { data: cells, error: cellsError } = await catalogCellQuery;
@@ -120,10 +112,7 @@ export async function GET(request: Request) {
   const leaderById = new Map(leaders.map((leader) => [leader.id, leader]));
   const cellById = new Map(cells.map((cell) => [cell.id, cell]));
 
-  const visibleNetworkIds =
-    access.role === "admin"
-      ? networks.map((network) => network.id)
-      : [...new Set(cells.map((cell) => cell.network_id))];
+  const visibleNetworkIds = networks.map((network) => network.id);
   const effectiveCellIds = networkId
     ? visibleNetworkIds.includes(networkId)
       ? cells
@@ -141,9 +130,6 @@ export async function GET(request: Request) {
     let query = access.adminClient
       .from("members")
       .select("id", { count: "exact", head: true });
-    if (access.role !== "admin") {
-      query = query.in("cell_id", cellIds);
-    }
     if (options?.active !== undefined) {
       query = query.eq("is_active", options.active);
     }
@@ -154,16 +140,14 @@ export async function GET(request: Request) {
   };
 
   const countQueries =
-    access.role === "admin" || cellIds.length
-      ? await Promise.all([
-          baseCountQuery(),
-          baseCountQuery({ active: true }),
-          baseCountQuery({ active: false }),
-          baseCountQuery({
-            since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }),
-        ])
-      : [];
+    await Promise.all([
+      baseCountQuery(),
+      baseCountQuery({ active: true }),
+      baseCountQuery({ active: false }),
+      baseCountQuery({
+        since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    ]);
 
   if (countQueries.some((count) => count.error)) {
     const error = countQueries.find((count) => count.error)?.error;
@@ -178,12 +162,13 @@ export async function GET(request: Request) {
     return NextResponse.json({
       members: [],
       networks,
-      cells: cells.map((cell) => ({
+      cells: await Promise.all(cells.map(async (cell) => ({
         id: cell.id,
         name: cell.name,
         networkId: cell.network_id,
         isActive: cell.is_active,
-      })),
+        canManage: await canAccessCell(access, cell.id),
+      }))),
       stats: {
         total: countQueries[0]?.count ?? 0,
         active: countQueries[1]?.count ?? 0,
@@ -206,9 +191,6 @@ export async function GET(request: Request) {
     .order("full_name", { ascending: true })
     .range((page - 1) * pageSize, page * pageSize - 1);
 
-  if (access.role !== "admin") {
-    query = query.in("cell_id", cellIds);
-  }
   if (networkId || requestedCellId) {
     query = query.in("cell_id", filteredCellIds);
   }
@@ -236,7 +218,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const memberRows = (members ?? []).map((member) => {
+  const memberRows = await Promise.all((members ?? []).map(async (member) => {
     const cell = member.cell_id ? cellById.get(member.cell_id) : undefined;
     const network = cell ? networkById.get(cell.network_id) : undefined;
     const leader = cell?.leader_id
@@ -257,18 +239,20 @@ export async function GET(request: Request) {
       isActive: member.is_active,
       createdAt: member.created_at,
       updatedAt: member.updated_at,
+      canEdit: await canAccessCell(access, member.cell_id),
     };
-  });
+  }));
 
   return NextResponse.json({
     members: memberRows,
     networks,
-    cells: cells.map((cell) => ({
+    cells: await Promise.all(cells.map(async (cell) => ({
       id: cell.id,
       name: cell.name,
       networkId: cell.network_id,
       isActive: cell.is_active,
-    })),
+      canManage: await canAccessCell(access, cell.id),
+    }))),
     stats: {
       total: countQueries[0]?.count ?? 0,
       active: countQueries[1]?.count ?? 0,

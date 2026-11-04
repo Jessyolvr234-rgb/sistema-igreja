@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import {
   canAccessCell,
-  getAccessibleCellIds,
   getDashboardAccess,
 } from "@/lib/supabase/dashboard-access";
 import { writeAuditLog } from "@/lib/supabase/audit";
@@ -233,25 +232,18 @@ async function loadAccessibleMembers(
   access: Extract<
     Awaited<ReturnType<typeof getDashboardAccess>>,
     { ok: true }
-  >["access"],
-  cellIds: string[]
+  >["access"]
 ): Promise<{ members: AccessibleMember[] } | { error: unknown }> {
   const pageSize = 1000;
   const members: AccessibleMember[] = [];
   let offset = 0;
 
   while (true) {
-    let query = access.adminClient
+    const query = access.adminClient
       .from("members")
       .select("id, cell_id")
       .order("id", { ascending: true })
       .range(offset, offset + pageSize - 1);
-    if (access.role !== "admin") {
-      if (!cellIds.length) {
-        return { members: [] };
-      }
-      query = query.in("cell_id", cellIds);
-    }
     const { data, error } = await query;
     if (error) {
       console.error("Erro ao consultar membros para requisitos:", error);
@@ -320,11 +312,6 @@ export async function GET(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  const scope = await getAccessibleCellIds(access);
-  if ("error" in scope) {
-    return NextResponse.json({ error: scope.error }, { status: 500 });
-  }
-
   const { data: requirements, error: requirementsError } =
     await access.adminClient
       .from("requirements")
@@ -340,7 +327,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const memberResult = await loadAccessibleMembers(access, scope.cellIds);
+  const memberResult = await loadAccessibleMembers(access);
   if ("error" in memberResult) {
     return NextResponse.json(
       { error: "Não foi possível carregar os membros autorizados." },
@@ -410,7 +397,7 @@ export async function GET(request: Request) {
       );
     }
 
-    let memberQuery = access.adminClient
+    const memberQuery = access.adminClient
       .from("members")
       .select("id, full_name, email, phone, cell_id, is_active")
       .or(
@@ -418,12 +405,6 @@ export async function GET(request: Request) {
       )
       .order("full_name", { ascending: true })
       .limit(30);
-    if (access.role !== "admin") {
-      if (!scope.cellIds.length) {
-        return NextResponse.json({ members: [] });
-      }
-      memberQuery = memberQuery.in("cell_id", scope.cellIds);
-    }
     const { data: searchResults, error: searchError } = await memberQuery;
     if (searchError) {
       console.error("Erro ao pesquisar membros por requisito:", searchError);
@@ -450,18 +431,21 @@ export async function GET(request: Request) {
       return answerStatusFilter === "complete" ? complete : !complete;
     });
 
-    return NextResponse.json({
-      members: filteredMembers.map((member) => ({
+    const members = await Promise.all(filteredMembers.map(async (member) => ({
         id: member.id,
         fullName: member.full_name,
         isActive: member.is_active,
-      })),
+        canUpdate: await canAccessCell(access, member.cell_id),
+      })));
+
+    return NextResponse.json({
+      members,
     });
   }
 
   if (memberId) {
     const member = memberResult.members.find((entry) => entry.id === memberId);
-    if (!member || !(await canAccessCell(access, member.cell_id))) {
+    if (!member) {
       return NextResponse.json(
         { error: "Membro não encontrado ou sem permissão de acesso." },
         { status: 404 }
@@ -620,6 +604,7 @@ export async function GET(request: Request) {
         members: accessibleMemberIds.length,
       },
       canManage: access.role !== "leader",
+      canUpdateAnswers: await canAccessCell(access, member.cell_id),
       member: { id: member.id },
     });
   }

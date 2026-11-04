@@ -42,7 +42,12 @@ type RequirementForm = {
   isRequired: boolean;
   isActive: boolean;
 };
-type MemberResult = { id: string; fullName: string; isActive: boolean };
+type MemberResult = {
+  id: string;
+  fullName: string;
+  isActive: boolean;
+  canUpdate: boolean;
+};
 type RequirementsResponse = {
   requirements: Requirement[];
   stats: {
@@ -99,7 +104,8 @@ function isMemberResult(value: unknown): value is MemberResult {
     isRecord(value) &&
     typeof value.id === "string" &&
     typeof value.fullName === "string" &&
-    typeof value.isActive === "boolean"
+    typeof value.isActive === "boolean" &&
+    typeof value.canUpdate === "boolean"
   );
 }
 
@@ -446,7 +452,7 @@ export default function RequirementsManagement({
 
   async function saveAnswer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedMember || !selectedRequirement) {
+    if (!selectedMember || !selectedRequirement || !selectedMember.canUpdate) {
       setErrorMessage("Selecione um membro e um requisito.");
       return;
     }
@@ -846,7 +852,7 @@ export default function RequirementsManagement({
                 </small>
               </div>
             )}
-            {selectedRequirement?.isActive && (
+            {selectedRequirement?.isActive && selectedMember.canUpdate && (
               <form className={styles.moduleForm} onSubmit={saveAnswer}>
                 <h3 className={styles.moduleSectionTitle}>
                   {selectedRequirement.isRequired ? "Resposta *" : "Resposta"}
@@ -948,6 +954,11 @@ export default function RequirementsManagement({
                   </button>
                 </div>
               </form>
+            )}
+            {selectedRequirement?.isActive && !selectedMember.canUpdate && (
+              <p className={styles.moduleNote}>
+                Você pode consultar esta resposta, mas não tem permissão para alterá-la.
+              </p>
             )}
             {selectedRequirement?.answer?.history.length ? (
               <section className={styles.memberHistory}>

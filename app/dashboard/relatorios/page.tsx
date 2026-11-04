@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function RelatoriosPage() {
   const access = await getDashboardAccess();
-  if (!access.ok || access.access.role === "leader") {
+  if (!access.ok) {
     redirect("/dashboard");
   }
 

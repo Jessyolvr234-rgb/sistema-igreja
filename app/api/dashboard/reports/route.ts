@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  getAccessibleCellIds,
+  getAllCellIds,
   getDashboardAccess,
 } from "@/lib/supabase/dashboard-access";
 
@@ -60,7 +60,7 @@ async function loadMembers(
       .select("id, full_name, cell_id, is_active, created_at")
       .order("created_at", { ascending: true })
       .range(offset, offset + pageSize - 1);
-    if (access.role !== "admin" || restrictToCells) {
+    if (restrictToCells) {
       if (!cellIds.length) {
         return { members: [] as MemberRow[] };
       }
@@ -91,14 +91,7 @@ export async function GET(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  if (access.role === "leader") {
-    return NextResponse.json(
-      { error: "Líderes não têm acesso aos relatórios gerais." },
-      { status: 403 }
-    );
-  }
-
-  const scope = await getAccessibleCellIds(access);
+  const scope = await getAllCellIds(access);
   if ("error" in scope) {
     return NextResponse.json({ error: scope.error }, { status: 500 });
   }
@@ -156,16 +149,10 @@ export async function GET(request: Request) {
     );
   }
 
-  let networksQuery = access.adminClient
+  const networksQuery = access.adminClient
     .from("networks")
     .select("id, name, is_active, created_at")
     .order("name", { ascending: true });
-  if (access.role === "supervisor") {
-    networksQuery =
-      access.networkIds.length > 0
-        ? networksQuery.in("id", access.networkIds)
-        : networksQuery.eq("id", "00000000-0000-0000-0000-000000000000");
-  }
   const { data: networks, error: networksError } = await networksQuery;
   if (networksError) {
     console.error("Erro ao carregar redes para relatórios:", networksError);
@@ -227,7 +214,7 @@ export async function GET(request: Request) {
     access,
     allowedCellIds,
     status,
-    access.role !== "admin" || !!requestedNetworkId || !!requestedCellId
+    !!requestedNetworkId || !!requestedCellId
   );
   if ("error" in memberResult) {
     return NextResponse.json(

@@ -32,7 +32,10 @@ type MemberRequirement = {
   createdAt: string;
   answer: RequirementAnswer | null;
 };
-type RequirementResponse = { requirements: MemberRequirement[] };
+type RequirementResponse = {
+  requirements: MemberRequirement[];
+  canUpdateAnswers: boolean;
+};
 type RequirementDraft = { value: AnswerValue; notes: string };
 type Filter = "all" | "complete" | "pending";
 
@@ -112,11 +115,15 @@ function parseResponse(value: unknown): RequirementResponse | null {
   if (
     !isRecord(value) ||
     !Array.isArray(value.requirements) ||
-    !value.requirements.every(isRequirement)
+    !value.requirements.every(isRequirement) ||
+    typeof value.canUpdateAnswers !== "boolean"
   ) {
     return null;
   }
-  return { requirements: value.requirements };
+  return {
+    requirements: value.requirements,
+    canUpdateAnswers: value.canUpdateAnswers,
+  };
 }
 
 function isComplete(requirement: MemberRequirement, value: AnswerValue) {
@@ -156,6 +163,7 @@ export default function MemberRequirements({
   memberId: string;
 }) {
   const [requirements, setRequirements] = useState<MemberRequirement[]>([]);
+  const [canUpdateAnswers, setCanUpdateAnswers] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, RequirementDraft>>({});
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
@@ -177,14 +185,18 @@ export default function MemberRequirements({
     if (!parsed) {
       throw new Error("O servidor retornou requisitos em formato inválido.");
     }
-    return parsed.requirements;
+    return parsed;
   }, [memberId]);
 
-  const applyRequirements = useCallback((items: MemberRequirement[]) => {
-    setRequirements(items);
+  const applyRequirements = useCallback((responseData: RequirementResponse) => {
+    setRequirements(responseData.requirements);
+    setCanUpdateAnswers(responseData.canUpdateAnswers);
     setDrafts(
       Object.fromEntries(
-        items.map((requirement) => [requirement.id, valueToDraft(requirement)])
+        responseData.requirements.map((requirement) => [
+          requirement.id,
+          valueToDraft(requirement),
+        ])
       )
     );
   }, []);
@@ -192,9 +204,9 @@ export default function MemberRequirements({
   useEffect(() => {
     let active = true;
     fetchRequirements()
-      .then((items) => {
+      .then((responseData) => {
         if (active) {
-          applyRequirements(items);
+          applyRequirements(responseData);
           setErrorMessage("");
         }
       })
@@ -252,6 +264,9 @@ export default function MemberRequirements({
   }
 
   async function saveAnswer(requirement: MemberRequirement) {
+    if (!canUpdateAnswers) {
+      return;
+    }
     const draft = drafts[requirement.id] ?? valueToDraft(requirement);
     setSavingId(requirement.id);
     setErrorMessage("");
@@ -297,6 +312,7 @@ export default function MemberRequirements({
       return (
         <select
           aria-label={`Resposta para ${requirement.title}`}
+          disabled={!canUpdateAnswers}
           value={value === true ? "yes" : value === false ? "no" : ""}
           onChange={(event) =>
             updateDraft(requirement.id, {
@@ -319,6 +335,7 @@ export default function MemberRequirements({
       return (
         <select
           aria-label={`Resposta para ${requirement.title}`}
+          disabled={!canUpdateAnswers}
           value={typeof value === "string" ? value : ""}
           onChange={(event) =>
             updateDraft(requirement.id, { value: event.target.value || null })
@@ -337,6 +354,7 @@ export default function MemberRequirements({
       return (
         <textarea
           aria-label={`Resposta para ${requirement.title}`}
+          disabled={!canUpdateAnswers}
           rows={2}
           maxLength={5000}
           value={typeof value === "string" ? value : ""}
@@ -354,6 +372,7 @@ export default function MemberRequirements({
         <input
           aria-label={`Resposta para ${requirement.title}`}
           type="number"
+          disabled={!canUpdateAnswers}
           value={typeof value === "number" ? value : ""}
           onChange={(event) =>
             updateDraft(requirement.id, {
@@ -370,6 +389,7 @@ export default function MemberRequirements({
       <input
         aria-label={`Resposta para ${requirement.title}`}
         type="date"
+        disabled={!canUpdateAnswers}
         value={typeof value === "string" ? value : ""}
         onChange={(event) =>
           updateDraft(requirement.id, { value: event.target.value || null })
@@ -441,6 +461,11 @@ export default function MemberRequirements({
             registro não existe, é usada a data da última atualização.
           </p>
 
+          {!canUpdateAnswers && (
+            <p className={styles.moduleNote}>
+              Você pode consultar os requisitos deste membro, mas não tem permissão para alterá-los.
+            </p>
+          )}
           {filteredRequirements.length ? (
             <div className={styles.memberRequirementList}>
               {filteredRequirements.map((requirement) => {
@@ -489,6 +514,7 @@ export default function MemberRequirements({
                           rows={2}
                           maxLength={1000}
                           value={draft.notes}
+                          disabled={!canUpdateAnswers}
                           placeholder="Observações sobre este requisito"
                           onChange={(event) =>
                             updateDraft(requirement.id, {
@@ -518,7 +544,11 @@ export default function MemberRequirements({
                       <button
                         type="button"
                         className={styles.modulePrimaryButton}
-                        disabled={!changed || savingId === requirement.id}
+                        disabled={
+                          !canUpdateAnswers ||
+                          !changed ||
+                          savingId === requirement.id
+                        }
                         onClick={() => void saveAnswer(requirement)}
                       >
                         {savingId === requirement.id

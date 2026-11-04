@@ -7,7 +7,12 @@ import type { DashboardRole } from "@/lib/supabase/dashboard-access";
 type AttendanceStatus = "present" | "absent" | "justified";
 type AttendanceSelection = AttendanceStatus | "";
 
-type CellOption = { id: string; name: string; networkId: string };
+type CellOption = {
+  id: string;
+  name: string;
+  networkId: string;
+  canRecord: boolean;
+};
 type NetworkOption = { id: string; name: string };
 type RosterMember = {
   id: string;
@@ -77,12 +82,17 @@ function isRosterMember(value: unknown): value is RosterMember {
 
 function isRosterPayload(
   value: unknown
-): value is { members: RosterMember[]; meeting: unknown } {
+): value is {
+  members: RosterMember[];
+  meeting: unknown;
+  canRecordAttendance: boolean;
+} {
   return (
     isRecord(value) &&
     Array.isArray(value.members) &&
     value.members.every(isRosterMember) &&
-    "meeting" in value
+    "meeting" in value &&
+    typeof value.canRecordAttendance === "boolean"
   );
 }
 
@@ -107,7 +117,8 @@ function isCellOption(value: unknown): value is CellOption {
     isRecord(value) &&
     typeof value.id === "string" &&
     typeof value.name === "string" &&
-    typeof value.networkId === "string"
+    typeof value.networkId === "string" &&
+    typeof value.canRecord === "boolean"
   );
 }
 
@@ -152,6 +163,7 @@ export default function AttendanceManagement({
   const [cellId, setCellId] = useState("");
   const [date, setDate] = useState(() => localDateString(new Date()));
   const [roster, setRoster] = useState<RosterMember[]>([]);
+  const [canRecordAttendance, setCanRecordAttendance] = useState(false);
   const [statuses, setStatuses] = useState<
     Record<string, AttendanceSelection>
   >({});
@@ -298,6 +310,7 @@ export default function AttendanceManagement({
             }
           }
           setRoster(nextRoster);
+          setCanRecordAttendance(payload.canRecordAttendance);
           setStatuses(nextStatuses);
           setNotes(
             payload.meeting &&
@@ -333,6 +346,10 @@ export default function AttendanceManagement({
   async function saveAttendance() {
     if (!cellId || !networkId || !date || roster.length === 0) {
       setErrorMessage("Selecione uma rede, célula e data com membros ativos.");
+      return;
+    }
+    if (!canRecordAttendance) {
+      setErrorMessage("Você pode consultar esta frequência, mas não tem permissão para registrá-la.");
       return;
     }
     if (roster.some((member) => !statuses[member.id])) {
@@ -464,6 +481,7 @@ export default function AttendanceManagement({
               onChange={(event) => {
                 setNetworkId(event.target.value);
                 setCellId("");
+                setCanRecordAttendance(false);
                 setRoster([]);
                 setStatuses({});
                 setNotes("");
@@ -485,6 +503,7 @@ export default function AttendanceManagement({
               disabled={!networkId}
               onChange={(event) => {
                 setCellId(event.target.value);
+                setCanRecordAttendance(false);
                 setRoster([]);
                 setStatuses({});
                 setNotes("");
@@ -507,6 +526,7 @@ export default function AttendanceManagement({
               value={date}
               onChange={(event) => {
                 setDate(event.target.value);
+                setCanRecordAttendance(false);
                 setRoster([]);
                 setStatuses({});
                 setNotes("");
@@ -520,6 +540,7 @@ export default function AttendanceManagement({
               maxLength={2000}
               rows={2}
               value={notes}
+              disabled={!canRecordAttendance}
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Informações relevantes sobre a reunião"
             />
@@ -536,7 +557,7 @@ export default function AttendanceManagement({
               <button
                 type="button"
                 className={styles.moduleSecondaryButton}
-                disabled={!roster.length || rosterLoading}
+                disabled={!roster.length || rosterLoading || !canRecordAttendance}
                 onClick={() =>
                   setStatuses(
                     roster.reduce<Record<string, AttendanceSelection>>(
@@ -585,6 +606,7 @@ export default function AttendanceManagement({
                               className={styles.moduleAttendanceSelect}
                               aria-label={`Frequência de ${member.fullName}`}
                               value={statuses[member.id] ?? ""}
+                              disabled={!canRecordAttendance}
                               onChange={(event) =>
                                 setStatuses({
                                   ...statuses,
@@ -615,10 +637,15 @@ export default function AttendanceManagement({
                     registros existentes exigem administrador ou supervisor.
                   </p>
                 )}
+                {!canRecordAttendance && (
+                  <p className={styles.moduleNote}>
+                    Você pode consultar a frequência, mas não pode alterá-la nesta célula.
+                  </p>
+                )}
                 <button
                   type="button"
                   className={styles.modulePrimaryButton}
-                  disabled={saving || rosterLoading}
+                  disabled={saving || rosterLoading || !canRecordAttendance}
                   onClick={() => void saveAttendance()}
                 >
                   {saving ? "Salvando..." : "Salvar frequência"}

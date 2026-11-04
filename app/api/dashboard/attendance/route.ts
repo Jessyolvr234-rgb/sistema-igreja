@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import {
+  canAccessCell,
+  getAllCellIds,
   getAccessibleCellIds,
   getDashboardAccess,
 } from "@/lib/supabase/dashboard-access";
@@ -47,7 +49,7 @@ export async function GET(request: Request) {
     return accessFailure(result);
   }
   const { access } = result;
-  const scope = await getAccessibleCellIds(access);
+  const scope = await getAllCellIds(access);
   if ("error" in scope) {
     return NextResponse.json({ error: scope.error }, { status: 500 });
   }
@@ -261,6 +263,7 @@ export async function GET(request: Request) {
         phone: member.phone,
         status: statusByMemberId.get(member.id) ?? "",
       })),
+      canRecordAttendance: await canAccessCell(access, cell.id),
     });
   }
 
@@ -277,6 +280,11 @@ export async function GET(request: Request) {
         id: cell.id,
         name: cell.name,
         networkId: cell.network_id,
+        canRecord:
+          access.role === "admin" ||
+          (access.role === "supervisor" &&
+            access.networkIds.includes(cell.network_id)) ||
+          (access.role === "leader" && access.cellIds.includes(cell.id)),
       })),
       meetings: [],
     });
@@ -346,6 +354,11 @@ export async function GET(request: Request) {
       id: cell.id,
       name: cell.name,
       networkId: cell.network_id,
+      canRecord:
+        access.role === "admin" ||
+        (access.role === "supervisor" &&
+          access.networkIds.includes(cell.network_id)) ||
+        (access.role === "leader" && access.cellIds.includes(cell.id)),
     })),
     meetings: meetings.map((meeting) => {
       const entries = attendanceByMeeting.get(meeting.id) ?? [];

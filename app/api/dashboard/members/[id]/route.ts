@@ -44,13 +44,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
     );
   }
 
-  if (!(await canAccessCell(access, member.cell_id))) {
-    return NextResponse.json(
-      { error: "Você não tem permissão para acessar este membro." },
-      { status: 403 }
-    );
-  }
-
   const { data: history, error: historyError } = await access.adminClient
     .from("member_status_history")
     .select("id, previous_status, new_status, reason, changed_by, created_at")
@@ -99,6 +92,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       isActive: member.is_active,
       createdAt: member.created_at,
       updatedAt: member.updated_at,
+      canEdit: await canAccessCell(access, member.cell_id),
     },
     history: (history ?? []).map((entry) => ({
       id: entry.id,

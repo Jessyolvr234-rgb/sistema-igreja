@@ -10,6 +10,7 @@ type Cell = {
   name: string;
   networkId: string;
   networkName: string;
+  canManage: boolean;
   leaderId: string | null;
   leaderName: string | null;
   isActive: boolean;
@@ -68,6 +69,8 @@ function isCell(value: unknown): value is Cell {
     typeof value.networkId === "string" &&
     "networkName" in value &&
     typeof value.networkName === "string" &&
+    "canManage" in value &&
+    typeof value.canManage === "boolean" &&
     "leaderId" in value &&
     (typeof value.leaderId === "string" || value.leaderId === null) &&
     "leaderName" in value &&
@@ -457,7 +460,7 @@ export default function CellsManagement({ role }: { role: DashboardRole }) {
               <h2 id="cell-details">{selectedCell.name}</h2>
             </div>
             <div className={styles.moduleRowActions}>
-              {canManage && (
+              {selectedCell.canManage && (
                 <button
                   type="button"
                   className={styles.moduleSecondaryButton}
@@ -622,7 +625,7 @@ export default function CellsManagement({ role }: { role: DashboardRole }) {
                         >
                           Detalhes
                         </button>
-                        {canManage && (
+                        {cell.canManage && (
                           <button
                             type="button"
                             className={styles.moduleTextButton}

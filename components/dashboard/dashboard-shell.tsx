@@ -252,7 +252,6 @@ export default function DashboardShell({ email, children }: Props) {
                 isAdministrativeUser ||
                 ![
                   "/dashboard/usuarios",
-                  "/dashboard/relatorios",
                   "/dashboard/configuracoes",
                 ].includes(item.href)
             )

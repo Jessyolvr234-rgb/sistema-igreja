@@ -24,6 +24,7 @@ type Member = {
   isActive: boolean;
   createdAt: string | null;
   updatedAt: string | null;
+  canEdit: boolean;
 };
 
 type MemberDetail = Omit<
@@ -43,7 +44,13 @@ type MemberHistory = {
 type MemberResponse = {
   members: Member[];
   networks: { id: string; name: string }[];
-  cells: { id: string; name: string; networkId: string; isActive: boolean }[];
+  cells: {
+    id: string;
+    name: string;
+    networkId: string;
+    isActive: boolean;
+    canManage: boolean;
+  }[];
   stats: { total: number; active: number; inactive: number; newMembers: number };
   page: number;
   totalPages: number;
@@ -129,7 +136,9 @@ function isMemberDetail(value: unknown): value is MemberDetail {
     "createdAt" in value &&
     (typeof value.createdAt === "string" || value.createdAt === null) &&
     "updatedAt" in value &&
-    (typeof value.updatedAt === "string" || value.updatedAt === null)
+    (typeof value.updatedAt === "string" || value.updatedAt === null) &&
+    "canEdit" in value &&
+    typeof value.canEdit === "boolean"
   );
 }
 
@@ -194,7 +203,9 @@ function isMemberResponse(value: unknown): value is MemberResponse {
         "createdAt" in member &&
         isNullableString(member.createdAt) &&
         "updatedAt" in member &&
-        isNullableString(member.updatedAt)
+        isNullableString(member.updatedAt) &&
+        "canEdit" in member &&
+        typeof member.canEdit === "boolean"
     ) &&
     "networks" in value &&
     Array.isArray(value.networks) &&
@@ -222,7 +233,9 @@ function isMemberResponse(value: unknown): value is MemberResponse {
         "networkId" in cell &&
         typeof cell.networkId === "string" &&
         "isActive" in cell &&
-        typeof cell.isActive === "boolean"
+        typeof cell.isActive === "boolean" &&
+        "canManage" in cell &&
+        typeof cell.canManage === "boolean"
     ) &&
     "stats" in value &&
     !!value.stats &&
@@ -325,8 +338,10 @@ export default function MembersManagement() {
       : data?.cells ?? [];
   const formVisibleCells =
     formNetworkId && data
-      ? data.cells.filter((cell) => cell.networkId === formNetworkId)
-      : data?.cells ?? [];
+      ? data.cells.filter(
+          (cell) => cell.networkId === formNetworkId && cell.canManage
+        )
+      : data?.cells.filter((cell) => cell.canManage) ?? [];
 
   function startCreate() {
     setSelectedId("");
@@ -922,13 +937,15 @@ export default function MembersManagement() {
                         >
                           Ver perfil
                         </button>
-                        <button
-                          type="button"
-                          className={styles.moduleTextButton}
-                          onClick={() => void openMember(member, "edit")}
-                        >
-                          Editar
-                        </button>
+                        {member.canEdit && (
+                          <button
+                            type="button"
+                            className={styles.moduleTextButton}
+                            onClick={() => void openMember(member, "edit")}
+                          >
+                            Editar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
