@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Rede Êmaús | Gestão Igreja",
   description: "Administração e gestão da Rede Êmaús.",
-  applicationName: "Rede Êmaús",
+  applicationName: "Emaús",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Êmaús",
+    title: "Emaús",
   },
   icons: {
     apple: "/apple-touch-icon.png",

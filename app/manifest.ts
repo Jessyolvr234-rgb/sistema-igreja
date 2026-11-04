@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Rede Êmaús",
-    short_name: "Êmaús",
+    name: "Emaús",
+    short_name: "Emaús",
     description: "Gestão Igreja | Administração",
     start_url: "/",
     scope: "/",
