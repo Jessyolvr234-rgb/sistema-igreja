@@ -556,8 +556,24 @@ export default function RequirementsManagement({
       )}
 
       <div className={styles.memberStats}>
+        <button
+          type="button"
+          className={`${styles.moduleStat} ${styles.moduleStatButton}`}
+          onClick={() => {
+            setQuery("");
+            setStatusFilter("");
+            setTypeFilter("");
+            requestAnimationFrame(() =>
+              document
+                .getElementById("requirements-list")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            );
+          }}
+        >
+          <span>Total de requisitos</span>
+          <strong>{loading ? "…" : data?.stats.total ?? "—"}</strong>
+        </button>
         {[
-          ["Total de requisitos", data?.stats.total ?? "—"],
           ["Requisitos ativos", data?.stats.active ?? "—"],
           ["Respostas concluídas", data?.stats.completed ?? "—"],
           ["Pendências obrigatórias", data?.stats.pending ?? "—"],
@@ -988,7 +1004,11 @@ export default function RequirementsManagement({
         )}
       </section>
 
-      <section className={styles.modulePage} aria-label="Lista de requisitos">
+      <section
+        className={styles.modulePage}
+        id="requirements-list"
+        aria-label="Lista de requisitos"
+      >
         <div className={styles.memberFilters}>
           <label className={styles.moduleSearch}>
             <span className={styles.moduleSrOnly}>Pesquisar requisitos</span>

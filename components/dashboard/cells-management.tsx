@@ -130,12 +130,18 @@ function isCellsResponse(value: unknown): value is CellsResponse {
   );
 }
 
-export default function CellsManagement({ role }: { role: DashboardRole }) {
+export default function CellsManagement({
+  role,
+  initialStatus = "",
+}: {
+  role: DashboardRole;
+  initialStatus?: "" | "active";
+}) {
   const [data, setData] = useState<CellsResponse | null>(null);
   const [search, setSearch] = useState("");
   const [networkId, setNetworkId] = useState("");
   const [leaderId, setLeaderId] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<string>(initialStatus);
   const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

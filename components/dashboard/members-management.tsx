@@ -272,6 +272,7 @@ export default function MembersManagement() {
     "profile"
   );
   const [selectedId, setSelectedId] = useState("");
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberForm, setMemberForm] = useState<MemberForm>(emptyForm);
   const [formNetworkId, setFormNetworkId] = useState("");
   const [selectedCreatedAt, setSelectedCreatedAt] = useState<string | null>(null);
@@ -345,6 +346,7 @@ export default function MembersManagement() {
 
   function startCreate() {
     setSelectedId("");
+    setSelectedMember(null);
     setSelectedCreatedAt(null);
     setFormNetworkId("");
     setMemberForm({
@@ -367,6 +369,7 @@ export default function MembersManagement() {
     setFormMode(mode);
     setMemberTab("profile");
     setSelectedId(member.id);
+    setSelectedMember(member);
     setSelectedCreatedAt(member.createdAt);
     setFormNetworkId(member.networkId ?? "");
     setErrorMessage("");
@@ -454,6 +457,7 @@ export default function MembersManagement() {
       setFormOpen(false);
       setFormMode("create");
       setSelectedId("");
+      setSelectedMember(null);
       setPage(1);
       setLoading(true);
       setRefreshKey((key) => key + 1);
@@ -469,6 +473,43 @@ export default function MembersManagement() {
   }
 
   const isReadOnly = formMode === "view";
+  const memberStats = [
+    {
+      label: "Total de membros",
+      value: data?.stats.total ?? "—",
+      filter: "all",
+    },
+    {
+      label: "Membros ativos",
+      value: data?.stats.active ?? "—",
+      filter: "active",
+    },
+    {
+      label: "Membros inativos",
+      value: data?.stats.inactive ?? "—",
+      filter: "inactive",
+    },
+    {
+      label: "Novos membros (30 dias)",
+      value: data?.stats.newMembers ?? "—",
+      filter: "new",
+    },
+  ] as const;
+
+  function showMemberStat(filter: (typeof memberStats)[number]["filter"]) {
+    setSearch("");
+    setNetworkId("");
+    setCellId("");
+    setStatus(filter === "active" || filter === "inactive" ? filter : "");
+    setPeriod(filter === "new" ? "30d" : "");
+    setPage(1);
+    setLoading(true);
+    requestAnimationFrame(() =>
+      document
+        .getElementById("members-list")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  }
 
   return (
     <section className={styles.modulePage} aria-labelledby="members-title">
@@ -499,21 +540,26 @@ export default function MembersManagement() {
       )}
 
       <div className={styles.memberStats}>
-        {[
-          ["Total de membros", data?.stats.total ?? "—"],
-          ["Membros ativos", data?.stats.active ?? "—"],
-          ["Membros inativos", data?.stats.inactive ?? "—"],
-          ["Novos membros (30 dias)", data?.stats.newMembers ?? "—"],
-        ].map(([label, value]) => (
-          <article className={styles.moduleStat} key={label}>
-            <span>{label}</span>
-            <strong>{loading ? "…" : value}</strong>
-          </article>
+        {memberStats.map((stat) => (
+          <button
+            type="button"
+            className={`${styles.moduleStat} ${styles.moduleStatButton}`}
+            key={stat.label}
+            onClick={() => showMemberStat(stat.filter)}
+          >
+            <span>{stat.label}</span>
+            <strong>{loading ? "…" : stat.value}</strong>
+          </button>
         ))}
       </div>
 
       {formOpen && (
-        <form className={styles.moduleForm} onSubmit={saveMember}>
+        <form
+          className={`${styles.moduleForm} ${
+            isReadOnly ? styles.memberProfileForm : ""
+          }`}
+          onSubmit={saveMember}
+        >
           <div className={styles.moduleFormHeading}>
             <div>
               <span className={styles.moduleEyebrow}>
@@ -538,6 +584,7 @@ export default function MembersManagement() {
                 setFormOpen(false);
                 setFormMode("create");
                 setSelectedId("");
+                setSelectedMember(null);
               }}
             >
               Fechar
@@ -570,6 +617,44 @@ export default function MembersManagement() {
               </button>
             </div>
           )}
+
+          {formMode === "view" &&
+            memberTab === "profile" &&
+            selectedMember && (
+              <section
+                className={styles.memberProfileDetails}
+                aria-label="Dados do membro"
+              >
+                {[
+                  ["Telefone", selectedMember.phone || "Não informado"],
+                  ["E-mail", selectedMember.email || "Não informado"],
+                  [
+                    "Data de nascimento",
+                    displayDate(selectedMember.birthDate),
+                  ],
+                  [
+                    "Estado civil",
+                    selectedMember.maritalStatus || "Não informado",
+                  ],
+                  ["Rede", selectedMember.networkName || "Não informado"],
+                  ["Célula", selectedMember.cellName || "Não informado"],
+                  [
+                    "Líder responsável",
+                    selectedMember.leaderName || "Não informado",
+                  ],
+                  [
+                    "Cadastro",
+                    displayDate(selectedCreatedAt ?? selectedMember.createdAt),
+                  ],
+                  ["Situação", selectedMember.isActive ? "Ativo" : "Inativo"],
+                ].map(([label, value]) => (
+                  <dl className={styles.memberProfileDetail} key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </dl>
+                ))}
+              </section>
+            )}
 
           {(formMode !== "view" || memberTab === "profile") && (
             <>
@@ -723,20 +808,18 @@ export default function MembersManagement() {
             </div>
           )}
 
-          {formMode === "view" && (
+          {formMode === "view" && selectedMember?.canEdit && (
             <div className={styles.moduleFormActions}>
-              <p className={styles.moduleNote}>
-                Cadastro em {displayDate(selectedCreatedAt)}
-              </p>
               <button
                 type="button"
                 className={styles.modulePrimaryButton}
+                aria-label={`Editar perfil do membro ${selectedMember.fullName}`}
                 onClick={() => {
                   setMemberTab("profile");
                   setFormMode("edit");
                 }}
               >
-                Editar membro
+                Editar perfil do membro
               </button>
             </div>
           )}
@@ -779,11 +862,15 @@ export default function MembersManagement() {
             </>
           )}
 
-          {formMode === "view" && memberTab === "requirements" && selectedId && (
-            <MemberRequirements key={selectedId} memberId={selectedId} />
-          )}
         </form>
       )}
+
+      {formOpen &&
+        formMode === "view" &&
+        memberTab === "requirements" &&
+        selectedId && (
+          <MemberRequirements key={selectedId} memberId={selectedId} />
+        )}
 
       <div className={styles.memberFilters}>
         <label className={styles.moduleSearch}>
@@ -869,7 +956,7 @@ export default function MembersManagement() {
         </label>
       </div>
 
-      <div className={styles.moduleTableCard}>
+      <div className={styles.moduleTableCard} id="members-list">
         {loading ? (
           <p className={styles.moduleEmpty}>Carregando membros...</p>
         ) : errorMessage && !data ? (
@@ -887,49 +974,22 @@ export default function MembersManagement() {
             <table className={styles.moduleTable}>
               <thead>
                 <tr>
-                  <th>Nome completo</th>
-                  <th>Telefone</th>
-                  <th>Rede</th>
-                  <th>Célula</th>
-                  <th>Líder responsável</th>
-                  <th>Cadastro</th>
+                  <th>Membro</th>
                   <th>Situação</th>
-                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {data.members.map((member) => (
                   <tr key={member.id}>
-                    <td data-label="Nome">
-                      <strong className={styles.moduleName}>
-                        {member.fullName}
-                      </strong>
-                      <small className={styles.moduleSubtext}>
-                        {member.email || "Sem e-mail"}
-                      </small>
-                    </td>
-                    <td data-label="Telefone">{member.phone || "—"}</td>
-                    <td data-label="Rede">{member.networkName || "—"}</td>
-                    <td data-label="Célula">{member.cellName || "—"}</td>
-                    <td data-label="Líder">
-                      {member.leaderName || "Não informado"}
-                    </td>
-                    <td data-label="Cadastro">
-                      {displayDate(member.createdAt)}
-                    </td>
-                    <td data-label="Situação">
-                      <span
-                        className={`${styles.moduleBadge} ${
-                          member.isActive
-                            ? styles.moduleBadgeActive
-                            : styles.moduleBadgeInactive
-                        }`}
+                    <td className={styles.memberListCell} data-label="Membro">
+                      <div className={styles.memberListIdentity}>
+                        <strong className={styles.moduleName}>
+                          {member.fullName}
+                        </strong>
+                      </div>
+                      <div
+                        className={`${styles.moduleRowActions} ${styles.memberListActions}`}
                       >
-                        {member.isActive ? "Ativo" : "Inativo"}
-                      </span>
-                    </td>
-                    <td data-label="Ações">
-                      <div className={styles.moduleRowActions}>
                         <button
                           type="button"
                           className={styles.moduleTextButton}
@@ -941,12 +1001,24 @@ export default function MembersManagement() {
                           <button
                             type="button"
                             className={styles.moduleTextButton}
+                            aria-label={`Editar perfil do membro ${member.fullName}`}
                             onClick={() => void openMember(member, "edit")}
                           >
-                            Editar
+                            Editar perfil
                           </button>
                         )}
                       </div>
+                    </td>
+                    <td data-label="Situação">
+                      <span
+                        className={`${styles.moduleBadge} ${
+                          member.isActive
+                            ? styles.moduleBadgeActive
+                            : styles.moduleBadgeInactive
+                        }`}
+                      >
+                        {member.isActive ? "Ativo" : "Inativo"}
+                      </span>
                     </td>
                   </tr>
                 ))}

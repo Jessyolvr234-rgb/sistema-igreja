@@ -358,12 +358,16 @@
 
 .statCard {
   position: relative;
+  display: block;
   min-width: 0;
   padding: 20px;
   border: 1px solid var(--dashboard-border);
   border-radius: 12px;
+  color: inherit;
   background: #ffffff;
   box-shadow: 0 5px 18px rgba(23, 43, 77, 0.035);
+  text-align: left;
+  text-decoration: none;
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,
@@ -374,6 +378,17 @@
   transform: translateY(-2px);
   border-color: #d4dfeb;
   box-shadow: 0 10px 24px rgba(23, 43, 77, 0.075);
+}
+
+.statCard:focus-visible {
+  outline: 3px solid rgba(87, 136, 190, 0.6);
+  outline-offset: 3px;
+}
+
+.overviewError {
+  margin: -8px 0 20px;
+  color: #9c2929;
+  font-size: 12px;
 }
 
 .statLabel {
@@ -1399,6 +1414,19 @@
   box-shadow: 0 5px 16px rgba(23, 43, 77, 0.03);
 }
 
+.moduleStatButton {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.moduleStatButton:focus-visible {
+  outline: 3px solid rgba(87, 136, 190, 0.6);
+  outline-offset: 3px;
+}
+
 .moduleStat span {
   color: #788496;
   font-size: 11px;
@@ -1651,6 +1679,50 @@
   font-weight: 600;
 }
 
+.memberListCell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.memberListIdentity {
+  min-width: 0;
+}
+
+.memberListActions {
+  flex: 0 0 auto;
+}
+
+.memberProfileDetails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.memberProfileDetail {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 13px;
+  border: 1px solid #e8edf3;
+  border-radius: 9px;
+  background: #f9fbfd;
+}
+
+.memberProfileDetail dt {
+  color: #8390a1;
+  font-size: 10px;
+}
+
+.memberProfileDetail dd {
+  min-width: 0;
+  color: #273951;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .moduleSubtext {
   display: block;
   max-width: 190px;
@@ -1870,6 +1942,12 @@
   background: #ffffff;
 }
 
+.memberProfileForm > .moduleSectionTitle,
+.memberProfileForm > .moduleFields,
+.memberProfileForm > .moduleNote {
+  display: none;
+}
+
 .memberRequirements {
   display: grid;
   gap: 16px;
@@ -2079,6 +2157,24 @@
 
   .moduleTable td:first-child::before {
     display: none;
+  }
+
+  .moduleTable td.memberListCell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .memberListCell .moduleRowActions {
+    gap: 8px;
+  }
+
+  .memberListCell .moduleTextButton {
+    font-size: 10px;
+  }
+
+  .memberProfileDetails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .moduleSubtext {
@@ -3230,6 +3326,19 @@
   border-color: #2b3a4e;
   background-color: #172538;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard[data-theme="dark"] .memberProfileDetail {
+  border-color: #2b3c52;
+  background: #1b2b40;
+}
+
+.dashboard[data-theme="dark"] .memberProfileDetail dt {
+  color: #91a2b7;
+}
+
+.dashboard[data-theme="dark"] .memberProfileDetail dd {
+  color: #e1e9f2;
 }
 
 .dashboard[data-theme="dark"] .statCard::before {

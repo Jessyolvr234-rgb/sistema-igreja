@@ -32,6 +32,44 @@ type IconName =
   | "settings"
   | "menu";
 
+type OverviewStats = {
+  members: number;
+  networks: number;
+  activeCells: number;
+  recentMeetings: number;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+async function fetchOverviewPayload(
+  path: string,
+  signal: AbortSignal
+): Promise<unknown> {
+  const response = await fetch(path, { signal });
+  const payload: unknown = await response.json();
+  if (!response.ok) {
+    const message =
+      isRecord(payload) && typeof payload.error === "string"
+        ? payload.error
+        : "Não foi possível carregar o resumo.";
+    throw new Error(message);
+  }
+  return payload;
+}
+
+function getOverviewCount(payload: unknown, key: string): number {
+  if (
+    !isRecord(payload) ||
+    !isRecord(payload.stats) ||
+    typeof payload.stats[key] !== "number"
+  ) {
+    throw new Error("O servidor retornou um resumo inválido.");
+  }
+  return payload.stats[key];
+}
+
 const menuItems = [
   { icon: "overview", label: "Visão geral", href: "/dashboard" },
   { icon: "members", label: "Membros", href: "/dashboard/membros" },
@@ -49,10 +87,34 @@ const menuItems = [
 ] as const;
 
 const stats = [
-  { label: "Total de membros", icon: "members" },
-  { label: "Redes cadastradas", icon: "networks" },
-  { label: "Células ativas", icon: "cells" },
-  { label: "Frequência recente", icon: "attendance" },
+  {
+    label: "Total de membros",
+    icon: "members",
+    href: "/dashboard/membros",
+    summaryKey: "members",
+    description: "Ver todos os membros",
+  },
+  {
+    label: "Redes cadastradas",
+    icon: "networks",
+    href: "/dashboard/redes",
+    summaryKey: "networks",
+    description: "Ver todas as redes",
+  },
+  {
+    label: "Células ativas",
+    icon: "cells",
+    href: "/dashboard/celulas?status=active",
+    summaryKey: "activeCells",
+    description: "Ver células ativas",
+  },
+  {
+    label: "Frequência recente",
+    icon: "attendance",
+    href: "/dashboard/frequencia",
+    summaryKey: "recentMeetings",
+    description: "Reuniões registradas",
+  },
 ] as const;
 
 const iconPaths: Record<IconName, string[]> = {
@@ -134,9 +196,47 @@ export default function DashboardShell({ email, children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [headerProfile, setHeaderProfile] = useState<HeaderProfile | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [overviewStats, setOverviewStats] = useState<OverviewStats | null>(null);
+  const [overviewError, setOverviewError] = useState("");
   const pathname = usePathname();
+  const showOverview = pathname === "/dashboard" && children == null;
   const isAdministrativeUser =
     headerProfile?.role === "admin" || headerProfile?.role === "supervisor";
+
+  useEffect(() => {
+    if (!showOverview) return;
+
+    const controller = new AbortController();
+    Promise.all([
+      fetchOverviewPayload("/api/dashboard/members?page=1", controller.signal),
+      fetchOverviewPayload("/api/dashboard/networks", controller.signal),
+      fetchOverviewPayload("/api/dashboard/cells", controller.signal),
+      fetchOverviewPayload("/api/dashboard/attendance", controller.signal),
+    ])
+      .then(([members, networks, cells, attendance]) => {
+        if (!isRecord(attendance) || !Array.isArray(attendance.meetings)) {
+          throw new Error("O servidor retornou um resumo de frequência inválido.");
+        }
+        setOverviewStats({
+          members: getOverviewCount(members, "total"),
+          networks: getOverviewCount(networks, "total"),
+          activeCells: getOverviewCount(cells, "active"),
+          recentMeetings: attendance.meetings.length,
+        });
+        setOverviewError("");
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("Erro ao carregar indicadores da visão geral:", error);
+        setOverviewError(
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar os indicadores."
+        );
+      });
+
+    return () => controller.abort();
+  }, [showOverview]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -431,18 +531,33 @@ export default function DashboardShell({ email, children }: Props) {
 
               <section className={styles.stats} aria-label="Resumo">
                 {stats.map((stat) => (
-                  <article className={styles.statCard} key={stat.label}>
+                  <Link
+                    className={styles.statCard}
+                    href={stat.href}
+                    key={stat.label}
+                  >
                     <div className={styles.statLabel}>
                       <span>{stat.label}</span>
                       <span className={styles.statIcon}>
                         <DashboardIcon name={stat.icon} />
                       </span>
                     </div>
-                    <strong className={styles.statValue}>—</strong>
-                    <small>Dados serão conectados ao banco</small>
-                  </article>
+                    <strong className={styles.statValue}>
+                      {overviewStats
+                        ? overviewStats[stat.summaryKey].toLocaleString("pt-BR")
+                        : overviewError
+                          ? "—"
+                          : "…"}
+                    </strong>
+                    <small>{stat.description}</small>
+                  </Link>
                 ))}
               </section>
+              {overviewError && (
+                <p className={styles.overviewError} role="alert">
+                  {overviewError}
+                </p>
+              )}
 
               <section className={styles.bottomGrid}>
                 <article className={styles.section}>
