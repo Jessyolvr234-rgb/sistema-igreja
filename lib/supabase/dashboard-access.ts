@@ -8,7 +8,6 @@ export type DashboardRole = "admin" | "supervisor" | "leader";
 export type DashboardAccess = {
   userId: string;
   role: DashboardRole;
-  networkIds: string[];
   cellIds: string[];
   adminClient: ReturnType<typeof createAdminClient>;
 };
@@ -73,26 +72,7 @@ export async function getDashboardAccess(): Promise<DashboardAccessResult> {
   }
 
   const adminClient = createAdminClient();
-  let networkIds: string[] = [];
   let cellIds: string[] = [];
-
-  if (profile.role === "supervisor") {
-    const { data, error } = await adminClient
-      .from("supervisor_networks")
-      .select("network_id")
-      .eq("supervisor_id", userId);
-
-    if (error) {
-      console.error("Erro ao consultar redes do supervisor:", error);
-      return {
-        ok: false,
-        status: 500,
-        error: "Não foi possível carregar as redes autorizadas.",
-      };
-    }
-
-    networkIds = data.map((assignment) => assignment.network_id);
-  }
 
   if (profile.role === "leader") {
     const { data, error } = await adminClient
@@ -117,7 +97,6 @@ export async function getDashboardAccess(): Promise<DashboardAccessResult> {
     access: {
       userId,
       role: profile.role,
-      networkIds,
       cellIds,
       adminClient,
     },
@@ -127,36 +106,18 @@ export async function getDashboardAccess(): Promise<DashboardAccessResult> {
 export async function getAccessibleCellIds(
   access: DashboardAccess
 ): Promise<{ cellIds: string[] } | { error: string }> {
-  if (access.role === "admin") {
-    const { data, error } = await access.adminClient
-      .from("cells")
-      .select("id")
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error("Erro ao consultar células:", error);
-      return { error: "Não foi possível carregar as células." };
-    }
-
-    return { cellIds: data.map((cell) => cell.id) };
-  }
-
   if (access.role === "leader") {
     return { cellIds: access.cellIds };
-  }
-
-  if (access.networkIds.length === 0) {
-    return { cellIds: [] };
   }
 
   const { data, error } = await access.adminClient
     .from("cells")
     .select("id")
-    .in("network_id", access.networkIds);
+    .order("name", { ascending: true });
 
   if (error) {
-    console.error("Erro ao consultar células do supervisor:", error);
-    return { error: "Não foi possível carregar as células autorizadas." };
+    console.error("Erro ao consultar células:", error);
+    return { error: "Não foi possível carregar as células." };
   }
 
   return { cellIds: data.map((cell) => cell.id) };
@@ -183,10 +144,10 @@ export async function canAccessCell(
   cellId: string | null
 ): Promise<boolean> {
   if (!cellId) {
-    return access.role === "admin";
+    return hasAdministrativeAccess(access);
   }
 
-  if (access.role === "admin") {
+  if (access.role !== "leader") {
     const { data, error } = await access.adminClient
       .from("cells")
       .select("id")
@@ -200,20 +161,5 @@ export async function canAccessCell(
     return !!data;
   }
 
-  if (access.role === "leader") {
-    return access.cellIds.includes(cellId);
-  }
-
-  const { data, error } = await access.adminClient
-    .from("cells")
-    .select("network_id")
-    .eq("id", cellId)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Erro ao validar acesso à célula:", error);
-    return false;
-  }
-
-  return !!data && access.networkIds.includes(data.network_id);
+  return access.cellIds.includes(cellId);
 }

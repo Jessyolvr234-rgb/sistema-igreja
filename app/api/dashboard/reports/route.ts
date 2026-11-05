@@ -640,11 +640,11 @@ export async function GET(request: Request) {
       totalNetworks: reportNetworks.length,
       totalCells: cells.length,
       totalSupervisors:
-        access.role === "admin"
+        access.role !== "leader"
           ? (adminProfiles ?? []).filter((profile) => profile.role === "supervisor").length
           : profileCount("supervisor"),
       totalLeaders:
-        access.role === "admin"
+        access.role !== "leader"
           ? (adminProfiles ?? []).filter((profile) => profile.role === "leader").length
           : profileCount("leader"),
       newMembers: [...memberGrowthCounts.values()].reduce(

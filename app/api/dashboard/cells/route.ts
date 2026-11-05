@@ -56,13 +56,6 @@ async function validateCellAssignments(
   >,
   input: CellInput
 ) {
-  if (
-    access.role === "supervisor" &&
-    !access.networkIds.includes(input.networkId)
-  ) {
-    return { error: "Você não pode gerenciar células desta rede.", status: 403 };
-  }
-
   const { data: network, error: networkError } = await access.adminClient
     .from("networks")
     .select("id")
@@ -230,10 +223,7 @@ export async function GET(request: Request) {
     name: cell.name,
     networkId: cell.network_id,
     networkName: networkById.get(cell.network_id) ?? "Rede",
-    canManage:
-      access.role === "admin" ||
-      (access.role === "supervisor" &&
-        access.networkIds.includes(cell.network_id)),
+    canManage: access.role !== "leader",
     leaderId: cell.leader_id,
     leaderName: cell.leader_id
       ? leaderById.get(cell.leader_id) ?? "Líder não encontrado"
@@ -268,12 +258,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     cells: filteredCells,
-    networks:
-      access.role === "supervisor"
-        ? (networkResult.data ?? []).filter((network) =>
-            access.networkIds.includes(network.id)
-          )
-        : networkResult.data ?? [],
+    networks: networkResult.data ?? [],
     leaders,
     stats: {
       total: mappedCells.length,
@@ -407,13 +392,9 @@ export async function PATCH(request: Request) {
   if ("error" in scope) {
     return NextResponse.json({ error: scope.error }, { status: 500 });
   }
-  if (
-    access.role !== "admin" &&
-    (!scope.cellIds.includes(body.id) ||
-      !access.networkIds.includes(input.networkId))
-  ) {
+  if (!scope.cellIds.includes(body.id)) {
     return NextResponse.json(
-      { error: "Você não pode editar células fora das suas redes." },
+      { error: "A célula selecionada não existe ou não pode ser editada." },
       { status: 403 }
     );
   }

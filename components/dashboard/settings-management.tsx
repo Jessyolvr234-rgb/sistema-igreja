@@ -700,17 +700,13 @@ export default function SettingsManagement() {
                       <tr>
                         <td data-label="Recurso">Redes</td>
                         <td data-label="Administrador">Todas: consultar e gerenciar</td>
-                        <td data-label="Supervisor">
-                          Todas: consultar; criar; atribuídas: gerenciar
-                        </td>
+                        <td data-label="Supervisor">Todas: consultar e gerenciar</td>
                         <td data-label="Líder">Todas: consultar</td>
                       </tr>
                       <tr>
                         <td data-label="Recurso">Células e membros</td>
                         <td data-label="Administrador">Todas: consultar e gerenciar</td>
-                        <td data-label="Supervisor">
-                          Todas: consultar; atribuídas: gerenciar
-                        </td>
+                        <td data-label="Supervisor">Todas: consultar e gerenciar</td>
                         <td data-label="Líder">
                           Todas: consultar; própria célula: membros gerenciar
                         </td>
@@ -718,9 +714,7 @@ export default function SettingsManagement() {
                       <tr>
                         <td data-label="Recurso">Frequência</td>
                         <td data-label="Administrador">Todas: consultar e gerenciar</td>
-                        <td data-label="Supervisor">
-                          Todas: consultar; atribuídas: registrar e corrigir
-                        </td>
+                        <td data-label="Supervisor">Todas: consultar e gerenciar</td>
                         <td data-label="Líder">
                           Todas: consultar; própria célula: registrar
                         </td>
@@ -728,9 +722,7 @@ export default function SettingsManagement() {
                       <tr>
                         <td data-label="Recurso">Requisitos</td>
                         <td data-label="Administrador">Consultar e gerenciar globalmente</td>
-                        <td data-label="Supervisor">
-                          Consultar tudo; catálogo global; respostas em redes atribuídas
-                        </td>
+                        <td data-label="Supervisor">Consultar e gerenciar globalmente</td>
                         <td data-label="Líder">
                           Consultar tudo; atualizar respostas da própria célula
                         </td>

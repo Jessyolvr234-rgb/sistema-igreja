@@ -203,10 +203,7 @@ function toNetworkView(
 
   return {
     id: network.id,
-    canManage:
-      access.role === "admin" ||
-      (access.role === "supervisor" &&
-        access.networkIds.includes(network.id)),
+    canManage: access.role !== "leader",
     name: network.name,
     description: network.description,
     isActive: network.is_active,
@@ -352,13 +349,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: input }, { status: 400 });
   }
 
-  const supervisorIds = [
-    ...new Set([
-      ...input.supervisorIds,
-      ...(access.role === "supervisor" ? [access.userId] : []),
-    ]),
-  ];
-  const supervisorValidation = await validateSupervisors(access, supervisorIds);
+  const supervisorIds = input.supervisorIds;
+  const supervisorValidation = await validateSupervisors(
+    access,
+    supervisorIds
+  );
   if (supervisorValidation.error) {
     console.error(
       "Erro ao validar supervisores:",
@@ -484,28 +479,16 @@ export async function PATCH(request: Request) {
       { status: 400 }
     );
   }
-  if (
-    access.role === "supervisor" &&
-    !access.networkIds.includes(body.id)
-  ) {
-    return NextResponse.json(
-      { error: "Você não pode editar redes fora da sua responsabilidade." },
-      { status: 403 }
-    );
-  }
-
   const input = parseNetworkInput(body);
   if (typeof input === "string") {
     return NextResponse.json({ error: input }, { status: 400 });
   }
 
-  const supervisorIds = [
-    ...new Set([
-      ...input.supervisorIds,
-      ...(access.role === "supervisor" ? [access.userId] : []),
-    ]),
-  ];
-  const supervisorValidation = await validateSupervisors(access, supervisorIds);
+  const supervisorIds = input.supervisorIds;
+  const supervisorValidation = await validateSupervisors(
+    access,
+    supervisorIds
+  );
   if (supervisorValidation.error) {
     console.error(
       "Erro ao validar supervisores:",

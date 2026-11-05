@@ -281,10 +281,7 @@ export async function GET(request: Request) {
         name: cell.name,
         networkId: cell.network_id,
         canRecord:
-          access.role === "admin" ||
-          (access.role === "supervisor" &&
-            access.networkIds.includes(cell.network_id)) ||
-          (access.role === "leader" && access.cellIds.includes(cell.id)),
+          access.role !== "leader" || access.cellIds.includes(cell.id),
       })),
       meetings: [],
     });
@@ -355,10 +352,7 @@ export async function GET(request: Request) {
       name: cell.name,
       networkId: cell.network_id,
       canRecord:
-        access.role === "admin" ||
-        (access.role === "supervisor" &&
-          access.networkIds.includes(cell.network_id)) ||
-        (access.role === "leader" && access.cellIds.includes(cell.id)),
+        access.role !== "leader" || access.cellIds.includes(cell.id),
     })),
     meetings: meetings.map((meeting) => {
       const entries = attendanceByMeeting.get(meeting.id) ?? [];

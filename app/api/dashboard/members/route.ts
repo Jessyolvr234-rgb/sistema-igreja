@@ -296,7 +296,7 @@ export async function POST(request: Request) {
     cellId = access.cellIds[0];
   }
 
-  if (access.role !== "admin" && !cellId) {
+  if (access.role === "leader" && !cellId) {
     return NextResponse.json(
       { error: "Selecione uma célula autorizada para cadastrar o membro." },
       { status: 400 }
